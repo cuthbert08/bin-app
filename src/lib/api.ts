@@ -1,8 +1,10 @@
+'use client';
+
 import axios from 'axios';
 import { Resident, DashboardData } from './types';
 
 const apiClient = axios.create({
-  baseURL: 'https://bin-reminder-app.vercel.app/api',
+  baseURL: '/api', // Use relative path for local API routes
   headers: {
     'Content-Type': 'application/json',
   },
@@ -53,5 +55,14 @@ export const sendAnnouncement = async (subject: string, message: string) => {
 // Logs
 export const getLogs = async (): Promise<string[]> => {
   const response = await apiClient.get('/logs');
-  return response.data.logs;
+  // The original API returns { logs: [...] }, so we might need to adjust this
+  // depending on what the proxy returns. Assuming proxy forwards the whole object.
+  if (response.data && Array.isArray(response.data.logs)) {
+      return response.data.logs;
+  }
+  // If the proxy just returns the array:
+  if(Array.isArray(response.data)) {
+      return response.data;
+  }
+  return [];
 };
