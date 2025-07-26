@@ -17,6 +17,7 @@ export function Dashboard() {
   const { toast } = useToast();
 
   const loadDashboardData = useCallback(async () => {
+    setLoading(true);
     try {
       const dashboardData = await getDashboardInfo();
       setData(dashboardData);
@@ -33,7 +34,6 @@ export function Dashboard() {
   }, [toast]);
 
   useEffect(() => {
-    setLoading(true);
     loadDashboardData();
   }, [loadDashboardData]);
 
@@ -155,7 +155,7 @@ export function Dashboard() {
         <Card>
           <CardHeader>
             <CardTitle>Send Custom Reminder</CardTitle>
-          </Header>
+          </CardHeader>
           <CardContent className="space-y-4">
             <Textarea 
               placeholder="Enter your custom reminder message here..."
