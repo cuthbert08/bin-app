@@ -142,7 +142,7 @@ export function Dashboard() {
         <Card>
           <CardHeader>
             <CardTitle>Next in Rotation</CardTitle>
-          </CardHeader>
+          </Header>
           <CardContent>
              {loading ? (
               <Skeleton className="h-8 w-3/4" />
