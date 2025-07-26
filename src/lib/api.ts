@@ -2,7 +2,7 @@ import axios from 'axios';
 import { Resident, DashboardData } from './types';
 
 const apiClient = axios.create({
-  baseURL: 'https://bin-reminder-app.vercel.app/api',
+  baseURL: '/api',
   headers: {
     'Content-Type': 'application/json',
   },
