@@ -94,7 +94,7 @@ export function Residents() {
       });
       return;
     }
-  
+
     try {
       if ('id' in editingResident && editingResident.id) {
         // We are editing an existing resident
@@ -124,7 +124,7 @@ export function Residents() {
       console.error(error);
     }
   };
-  
+
   const handleDeleteResident = async (id: string) => {
     try {
         await deleteResident(id);
@@ -212,9 +212,9 @@ export function Residents() {
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                             <AlertDialogHeader>
-                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                            <AlertDialogTitle>Are you sure you want to delete this resident?</AlertDialogTitle>
                             <AlertDialogDescription>
-                                This action cannot be undone. This will permanently delete the resident.
+                                This action cannot be undone.
                             </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
