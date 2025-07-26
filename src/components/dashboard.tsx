@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -19,8 +20,6 @@ export function Dashboard() {
 
   const loadDashboardData = useCallback(async () => {
     try {
-      // Don't set loading to true here if we are just refreshing
-      // setLoading(true); 
       const dashboardData = await getDashboardInfo();
       setData(dashboardData);
     } catch (error) {
@@ -63,33 +62,35 @@ export function Dashboard() {
   const handleTogglePause = async () => {
     if (!data) return;
 
+    const originalPauseState = data.reminders_paused;
+  
     // Optimistically update the UI
-    const currentPauseState = data.reminders_paused;
-    setData({
-        ...data,
-        reminders_paused: !currentPauseState,
+    setData(prevData => {
+        if (!prevData) return null;
+        return { ...prevData, reminders_paused: !prevData.reminders_paused };
     });
-
+  
     try {
       await togglePause();
       toast({
         title: 'System Status Updated',
-        description: `Reminders have been ${currentPauseState ? 'resumed' : 'paused'}.`,
+        description: `Reminders have been ${originalPauseState ? 'resumed' : 'paused'}.`,
       });
-      // Refresh data from server to confirm
+      // Refresh data from server to get the confirmed state
       await loadDashboardData(); 
     } catch (error) {
-      // Revert the optimistic update on error
-      setData({
-        ...data,
-        reminders_paused: currentPauseState,
-      });
       toast({
         title: 'Error updating status',
         description: 'Could not update the pause status.',
         variant: 'destructive',
       });
+       // If there's an error, revert the optimistic update and reload
+      setData(prevData => {
+        if (!prevData) return null;
+        return { ...prevData, reminders_paused: originalPauseState };
+      });
       console.error(error);
+      await loadDashboardData();
     }
   };
 
@@ -185,7 +186,7 @@ export function Dashboard() {
         <Card>
           <CardHeader>
             <CardTitle>Send Custom Reminder</CardTitle>
-          </CardHeader>
+          </Header>
           <CardContent className="space-y-4">
             <Textarea 
               placeholder="Enter your custom reminder message here..."
@@ -195,7 +196,7 @@ export function Dashboard() {
             />
             <Button onClick={() => handleSendReminder(customMessage)} disabled={!customMessage || loading || !data}>Send Custom Reminder</Button>
           </CardContent>
-        </Card>
+        </card>
       </div>
     </div>
   );
