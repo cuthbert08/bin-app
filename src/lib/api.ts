@@ -1,3 +1,5 @@
+'use server';
+
 import { Resident, DashboardData } from './types';
 import fs from 'fs/promises';
 import path from 'path';
