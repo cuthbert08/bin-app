@@ -19,7 +19,8 @@ export function Dashboard() {
 
   const loadDashboardData = useCallback(async () => {
     try {
-      setLoading(true);
+      // Don't set loading to true here if we are just refreshing
+      // setLoading(true); 
       const dashboardData = await getDashboardInfo();
       setData(dashboardData);
     } catch (error) {
@@ -35,6 +36,7 @@ export function Dashboard() {
   }, [toast]);
 
   useEffect(() => {
+    setLoading(true);
     loadDashboardData();
   }, [loadDashboardData]);
 
@@ -59,14 +61,29 @@ export function Dashboard() {
   };
 
   const handleTogglePause = async () => {
+    if (!data) return;
+
+    // Optimistically update the UI
+    const currentPauseState = data.reminders_paused;
+    setData({
+        ...data,
+        reminders_paused: !currentPauseState,
+    });
+
     try {
       await togglePause();
       toast({
         title: 'System Status Updated',
-        description: `Reminders have been ${data?.reminders_paused ? 'resumed' : 'paused'}.`,
+        description: `Reminders have been ${currentPauseState ? 'resumed' : 'paused'}.`,
       });
-      await loadDashboardData();
+      // Refresh data from server to confirm
+      await loadDashboardData(); 
     } catch (error) {
+      // Revert the optimistic update on error
+      setData({
+        ...data,
+        reminders_paused: currentPauseState,
+      });
       toast({
         title: 'Error updating status',
         description: 'Could not update the pause status.',
@@ -103,7 +120,7 @@ export function Dashboard() {
                 id="pause-reminders"
                 checked={data?.reminders_paused ?? false}
                 onCheckedChange={handleTogglePause}
-                disabled={loading}
+                disabled={loading || !data}
             />
             <Label htmlFor="pause-reminders">Pause All Reminders</Label>
         </div>
@@ -146,7 +163,7 @@ export function Dashboard() {
             )}
           </CardContent>
            <CardFooter>
-                <Button variant="outline" onClick={handleSkipTurn} disabled={loading}>
+                <Button variant="outline" onClick={handleSkipTurn} disabled={loading || !data}>
                     Skip Current Turn
                 </Button>
             </CardFooter>
@@ -162,7 +179,7 @@ export function Dashboard() {
             <p className="text-muted-foreground">
               Send the standard weekly reminder to the person currently on duty.
             </p>
-            <Button onClick={() => handleSendReminder()}>Send Reminder</Button>
+            <Button onClick={() => handleSendReminder()} disabled={loading || !data}>Send Reminder</Button>
           </CardContent>
         </Card>
         <Card>
@@ -174,8 +191,9 @@ export function Dashboard() {
               placeholder="Enter your custom reminder message here..."
               value={customMessage}
               onChange={(e) => setCustomMessage(e.target.value)}
+              disabled={loading || !data}
             />
-            <Button onClick={() => handleSendReminder(customMessage)} disabled={!customMessage}>Send Custom Reminder</Button>
+            <Button onClick={() => handleSendReminder(customMessage)} disabled={!customMessage || loading || !data}>Send Custom Reminder</Button>
           </CardContent>
         </Card>
       </div>
