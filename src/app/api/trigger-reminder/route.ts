@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { NextResponse } from 'next/server';
 
-const API_URL = 'https://bin-reminder-app.vercel.app/api/residents/set-current';
+const API_URL = 'https://bin-reminder-app.vercel.app/api/trigger-reminder';
 
 export async function POST(request: Request) {
     try {
@@ -10,7 +10,7 @@ export async function POST(request: Request) {
         return NextResponse.json(response.data);
     } catch (error) {
         if (axios.isAxiosError(error)) {
-            return new NextResponse(error.response?.data || 'Error setting current turn', {
+            return new NextResponse(error.response?.data || 'Error triggering reminder', {
                 status: error.response?.status || 500,
             });
         }
