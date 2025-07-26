@@ -1,16 +1,13 @@
-
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { getDashboardInfo, triggerReminder, togglePause, skipTurn } from '@/lib/api';
+import { getDashboardInfo, triggerReminder, skipTurn } from '@/lib/api';
 import { type DashboardData } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
 
 export function Dashboard() {
   const [data, setData] = useState<DashboardData | null>(null);
@@ -59,41 +56,6 @@ export function Dashboard() {
     }
   };
 
-  const handleTogglePause = async () => {
-    if (!data) return;
-
-    const originalPauseState = data.reminders_paused;
-    const newPauseState = !originalPauseState;
-
-    // Optimistic UI update
-    setData(prevData => {
-        if (!prevData) return null;
-        return { ...prevData, reminders_paused: newPauseState };
-    });
-
-    try {
-      await togglePause();
-      toast({
-        title: 'System Status Updated',
-        description: `Reminders have been ${newPauseState ? 'paused' : 'resumed'}.`,
-      });
-      // Refresh data from server to confirm state, but don't reset loading to avoid flicker
-      await loadDashboardData(); 
-    } catch (error) {
-      toast({
-        title: 'Error updating status',
-        description: 'Could not update the pause status.',
-        variant: 'destructive',
-      });
-      // Revert UI on error
-      setData(prevData => {
-        if (!prevData) return null;
-        return { ...prevData, reminders_paused: originalPauseState };
-      });
-      console.error('Failed to toggle pause:', error);
-    }
-  };
-
   const handleSkipTurn = async () => {
     try {
         await skipTurn();
@@ -116,15 +78,6 @@ export function Dashboard() {
     <div className="space-y-8">
       <div className="flex items-start justify-between">
         <h1 className="text-3xl font-bold">Dashboard</h1>
-        <div className="flex items-center space-x-2">
-            <Switch
-                id="pause-reminders"
-                checked={data?.reminders_paused ?? false}
-                onCheckedChange={handleTogglePause}
-                disabled={loading || !data}
-            />
-            <Label htmlFor="pause-reminders">Pause All Reminders</Label>
-        </div>
       </div>
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <Card>
@@ -142,7 +95,7 @@ export function Dashboard() {
         <Card>
           <CardHeader>
             <CardTitle>Next in Rotation</CardTitle>
-          </Header>
+          </CardHeader>
           <CardContent>
              {loading ? (
               <Skeleton className="h-8 w-3/4" />
@@ -154,7 +107,7 @@ export function Dashboard() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-base font-medium">System Status</CardTitle>
-          </Header>
+          </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">Last reminder run:</p>
             {loading ? (
@@ -186,7 +139,7 @@ export function Dashboard() {
         <Card>
           <CardHeader>
             <CardTitle>Send Custom Reminder</CardTitle>
-          </Header>
+          </CardHeader>
           <CardContent className="space-y-4">
             <Textarea 
               placeholder="Enter your custom reminder message here..."
@@ -196,7 +149,7 @@ export function Dashboard() {
             />
             <Button onClick={() => handleSendReminder(customMessage)} disabled={!customMessage || loading || !data}>Send Custom Reminder</Button>
           </CardContent>
-        </card>
+        </Card>
       </div>
     </div>
   );

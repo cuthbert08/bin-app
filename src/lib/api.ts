@@ -18,10 +18,6 @@ export const triggerReminder = async (message?: string) => {
   await apiClient.post('/trigger-reminder', message ? { message } : {});
 };
 
-export const togglePause = async () => {
-    await apiClient.post('/toggle-pause');
-};
-
 export const skipTurn = async () => {
     await apiClient.post('/skip-turn');
 };
