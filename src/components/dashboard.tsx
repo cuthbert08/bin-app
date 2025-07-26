@@ -9,22 +9,27 @@ import { type DashboardData } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format, nextWednesday, addDays } from 'date-fns';
+import { AlertTriangle } from 'lucide-react';
 
 export function Dashboard() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [customMessage, setCustomMessage] = useState('');
   const { toast } = useToast();
 
   const loadDashboardData = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       const dashboardData = await getDashboardInfo();
       setData(dashboardData);
     } catch (error) {
+      const errorMessage = 'Could not load dashboard information from the server.';
+      setError(errorMessage);
       toast({
         title: 'Error fetching dashboard data',
-        description: 'Could not load dashboard information from the server.',
+        description: errorMessage,
         variant: 'destructive',
       });
       console.error('Failed to fetch dashboard data:', error);
@@ -78,6 +83,31 @@ export function Dashboard() {
   const currentDutyDate = nextWednesday(new Date());
   const nextDutyDate = addDays(currentDutyDate, 7);
 
+  const renderCardContent = (value: string | undefined, date: Date) => {
+    if (loading) {
+      return (
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-3/4" />
+          <Skeleton className="h-4 w-1/2" />
+        </div>
+      );
+    }
+    if (error) {
+      return (
+        <div className="flex items-center text-destructive">
+          <AlertTriangle className="mr-2 h-4 w-4" />
+          <p className="text-sm font-medium">Error loading data</p>
+        </div>
+      );
+    }
+    return (
+      <div>
+        <p className="text-2xl font-bold">{value || 'N/A'}</p>
+        <p className="text-sm text-muted-foreground">{format(date, 'dd-MM-yyyy')}</p>
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-8">
       <div className="flex items-start justify-between">
@@ -89,17 +119,7 @@ export function Dashboard() {
             <CardTitle>Current Bin Duty</CardTitle>
           </CardHeader>
           <CardContent>
-            {loading ? (
-              <div className="space-y-2">
-                <Skeleton className="h-8 w-3/4" />
-                <Skeleton className="h-4 w-1/2" />
-              </div>
-            ) : (
-              <div>
-                <p className="text-2xl font-bold">{data?.current_duty?.name || 'N/A'}</p>
-                <p className="text-sm text-muted-foreground">{format(currentDutyDate, 'dd-MM-yyyy')}</p>
-              </div>
-            )}
+            {renderCardContent(data?.current_duty?.name, currentDutyDate)}
           </CardContent>
         </Card>
         <Card>
@@ -107,17 +127,7 @@ export function Dashboard() {
             <CardTitle>Next in Rotation</CardTitle>
           </CardHeader>
           <CardContent>
-             {loading ? (
-              <div className="space-y-2">
-                <Skeleton className="h-8 w-3/4" />
-                <Skeleton className="h-4 w-1/2" />
-              </div>
-            ) : (
-              <div>
-                <p className="text-2xl font-bold">{data?.next_in_rotation?.name || 'N/A'}</p>
-                <p className="text-sm text-muted-foreground">{format(nextDutyDate, 'dd-MM-yyyy')}</p>
-              </div>
-            )}
+            {renderCardContent(data?.next_in_rotation?.name, nextDutyDate)}
           </CardContent>
         </Card>
         <Card>
@@ -125,15 +135,22 @@ export function Dashboard() {
             <CardTitle className="text-base font-medium">System Status</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-muted-foreground">Last reminder run:</p>
             {loading ? (
-               <Skeleton className="h-6 w-1/2" />
+              <Skeleton className="h-6 w-1/2" />
+            ) : error ? (
+              <div className="flex items-center text-destructive">
+                <AlertTriangle className="mr-2 h-4 w-4" />
+                <p className="text-sm font-medium">Error</p>
+              </div>
             ) : (
-             <p className="text-lg font-semibold">{data?.system_status?.last_reminder_run || 'N/A'}</p>
+              <>
+                <p className="text-sm text-muted-foreground">Last reminder run:</p>
+                <p className="text-lg font-semibold">{data?.system_status?.last_reminder_run || 'N/A'}</p>
+              </>
             )}
           </CardContent>
            <CardFooter>
-                <Button variant="outline" onClick={handleSkipTurn} disabled={loading || !data}>
+                <Button variant="outline" onClick={handleSkipTurn} disabled={loading || !!error}>
                     Skip Current Turn
                 </Button>
             </CardFooter>
@@ -149,7 +166,7 @@ export function Dashboard() {
             <p className="text-muted-foreground">
               Send the standard weekly reminder to the person currently on duty.
             </p>
-            <Button onClick={() => handleSendReminder()} disabled={loading || !data}>Send Reminder</Button>
+            <Button onClick={() => handleSendReminder()} disabled={loading || !!error}>Send Reminder</Button>
           </CardContent>
         </Card>
         <Card>
@@ -157,13 +174,13 @@ export function Dashboard() {
             <CardTitle>Send Custom Reminder</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Textarea 
+            <Textarea
               placeholder="Enter your custom reminder message here..."
               value={customMessage}
               onChange={(e) => setCustomMessage(e.target.value)}
-              disabled={loading || !data}
+              disabled={loading || !!error}
             />
-            <Button onClick={() => handleSendReminder(customMessage)} disabled={!customMessage || loading || !data}>Send Custom Reminder</Button>
+            <Button onClick={() => handleSendReminder(customMessage)} disabled={!customMessage || loading || !!error}>Send Custom Reminder</Button>
           </CardContent>
         </Card>
       </div>
