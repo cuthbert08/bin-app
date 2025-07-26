@@ -61,7 +61,7 @@ export function Dashboard() {
 
   const handleTogglePause = async () => {
     if (!data) return;
-
+  
     const originalPauseState = data.reminders_paused;
   
     // Optimistically update the UI
@@ -84,13 +84,12 @@ export function Dashboard() {
         description: 'Could not update the pause status.',
         variant: 'destructive',
       });
-       // If there's an error, revert the optimistic update and reload
+       // If there's an error, revert the optimistic update
       setData(prevData => {
         if (!prevData) return null;
         return { ...prevData, reminders_paused: originalPauseState };
       });
       console.error(error);
-      await loadDashboardData();
     }
   };
 
