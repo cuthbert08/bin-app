@@ -8,6 +8,7 @@ import { getDashboardInfo, triggerReminder, skipTurn } from '@/lib/api';
 import { type DashboardData } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
+import { format, nextWednesday, addDays } from 'date-fns';
 
 export function Dashboard() {
   const [data, setData] = useState<DashboardData | null>(null);
@@ -74,6 +75,9 @@ export function Dashboard() {
     }
   };
 
+  const currentDutyDate = nextWednesday(new Date());
+  const nextDutyDate = addDays(currentDutyDate, 7);
+
   return (
     <div className="space-y-8">
       <div className="flex items-start justify-between">
@@ -86,9 +90,15 @@ export function Dashboard() {
           </CardHeader>
           <CardContent>
             {loading ? (
-              <Skeleton className="h-8 w-3/4" />
+              <div className="space-y-2">
+                <Skeleton className="h-8 w-3/4" />
+                <Skeleton className="h-4 w-1/2" />
+              </div>
             ) : (
-              <p className="text-2xl font-bold">{data?.current_duty?.name || 'N/A'}</p>
+              <div>
+                <p className="text-2xl font-bold">{data?.current_duty?.name || 'N/A'}</p>
+                <p className="text-sm text-muted-foreground">{format(currentDutyDate, 'dd-MM-yyyy')}</p>
+              </div>
             )}
           </CardContent>
         </Card>
@@ -98,9 +108,15 @@ export function Dashboard() {
           </CardHeader>
           <CardContent>
              {loading ? (
-              <Skeleton className="h-8 w-3/4" />
+              <div className="space-y-2">
+                <Skeleton className="h-8 w-3/4" />
+                <Skeleton className="h-4 w-1/2" />
+              </div>
             ) : (
-              <p className="text-2xl font-bold">{data?.next_in_rotation?.name || 'N/A'}</p>
+              <div>
+                <p className="text-2xl font-bold">{data?.next_in_rotation?.name || 'N/A'}</p>
+                <p className="text-sm text-muted-foreground">{format(nextDutyDate, 'dd-MM-yyyy')}</p>
+              </div>
             )}
           </CardContent>
         </Card>
@@ -139,7 +155,7 @@ export function Dashboard() {
         <Card>
           <CardHeader>
             <CardTitle>Send Custom Reminder</CardTitle>
-          </CardHeader>
+          </Header>
           <CardContent className="space-y-4">
             <Textarea 
               placeholder="Enter your custom reminder message here..."
