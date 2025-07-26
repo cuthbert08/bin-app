@@ -61,22 +61,23 @@ export function Dashboard() {
 
   const handleTogglePause = async () => {
     if (!data) return;
-  
+
     const originalPauseState = data.reminders_paused;
-  
-    // Optimistically update the UI
+    const newPauseState = !originalPauseState;
+
+    // Optimistic UI update
     setData(prevData => {
         if (!prevData) return null;
-        return { ...prevData, reminders_paused: !prevData.reminders_paused };
+        return { ...prevData, reminders_paused: newPauseState };
     });
-  
+
     try {
       await togglePause();
       toast({
         title: 'System Status Updated',
-        description: `Reminders have been ${originalPauseState ? 'resumed' : 'paused'}.`,
+        description: `Reminders have been ${newPauseState ? 'paused' : 'resumed'}.`,
       });
-      // Refresh data from server to get the confirmed state
+      // Refresh data from server to confirm state, but don't reset loading to avoid flicker
       await loadDashboardData(); 
     } catch (error) {
       toast({
@@ -84,12 +85,12 @@ export function Dashboard() {
         description: 'Could not update the pause status.',
         variant: 'destructive',
       });
-       // If there's an error, revert the optimistic update
+      // Revert UI on error
       setData(prevData => {
         if (!prevData) return null;
         return { ...prevData, reminders_paused: originalPauseState };
       });
-      console.error(error);
+      console.error('Failed to toggle pause:', error);
     }
   };
 
