@@ -23,9 +23,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import { getResidents, addResident, updateResident, deleteResident } from '@/lib/api';
+import { getResidents, addResident, updateResident, deleteResident, setCurrentTurn } from '@/lib/api';
 import { type Resident } from '@/lib/types';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Pencil, Trash2, CheckCircle } from 'lucide-react';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -143,6 +143,23 @@ export function Residents() {
     }
   };
 
+  const handleSetCurrent = async (resident: Resident) => {
+      try {
+          await setCurrentTurn(resident.id);
+          toast({
+              title: 'Current Turn Updated',
+              description: `${resident.name} is now set as the current person on duty.`
+          });
+      } catch (error) {
+          toast({
+              title: 'Error Setting Current Turn',
+              description: 'Could not update the current turn.',
+              variant: 'destructive',
+          });
+          console.error(error);
+      }
+  }
+
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
@@ -167,7 +184,7 @@ export function Residents() {
                 <TableCell><Skeleton className="h-6 w-28" /></TableCell>
                 <TableCell><Skeleton className="h-6 w-28" /></TableCell>
                 <TableCell><Skeleton className="h-6 w-40" /></TableCell>
-                <TableCell className="text-right"><Skeleton className="h-8 w-20" /></TableCell>
+                <TableCell className="text-right"><Skeleton className="h-8 w-32" /></TableCell>
               </TableRow>
             ))
           ) : residents.length > 0 ? (
@@ -177,7 +194,11 @@ export function Residents() {
                 <TableCell>{resident.contact.whatsapp || 'N/A'}</TableCell>
                 <TableCell>{resident.contact.sms || 'N/A'}</TableCell>
                 <TableCell>{resident.contact.email || 'N/A'}</TableCell>
-                <TableCell className="text-right">
+                <TableCell className="text-right space-x-1">
+                    <Button variant="outline" size="sm" onClick={() => handleSetCurrent(resident)}>
+                        <CheckCircle className="mr-2 h-4 w-4"/>
+                        Set as Current
+                    </Button>
                     <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(resident)}>
                         <Pencil />
                         <span className="sr-only">Edit</span>

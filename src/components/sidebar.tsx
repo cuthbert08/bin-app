@@ -2,13 +2,14 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Users, Megaphone, Trash2 } from 'lucide-react';
+import { Home, Users, Megaphone, Trash2, ScrollText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navItems = [
   { href: '/', label: 'Dashboard', icon: Home },
   { href: '/residents', label: 'Residents', icon: Users },
   { href: '/announcements', label: 'Announcements', icon: Megaphone },
+  { href: '/logs', label: 'Logs', icon: ScrollText },
 ];
 
 export function Sidebar() {

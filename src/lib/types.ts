@@ -12,4 +12,5 @@ export interface DashboardData {
   current_duty: { name: string };
   next_in_rotation: { name: string };
   system_status: { last_reminder_run: string };
+  reminders_paused: boolean;
 }

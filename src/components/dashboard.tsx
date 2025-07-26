@@ -1,13 +1,15 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { getDashboardInfo, triggerReminder } from '@/lib/api';
+import { getDashboardInfo, triggerReminder, togglePause, skipTurn } from '@/lib/api';
 import { type DashboardData } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
 export function Dashboard() {
   const [data, setData] = useState<DashboardData | null>(null);
@@ -15,25 +17,26 @@ export function Dashboard() {
   const [customMessage, setCustomMessage] = useState('');
   const { toast } = useToast();
 
-  useEffect(() => {
-    async function loadDashboardData() {
-      try {
-        setLoading(true);
-        const dashboardData = await getDashboardInfo();
-        setData(dashboardData);
-      } catch (error) {
-        toast({
-          title: 'Error fetching dashboard data',
-          description: 'Could not load dashboard information from the server.',
-          variant: 'destructive',
-        });
-        console.error('Failed to fetch dashboard data:', error);
-      } finally {
-        setLoading(false);
-      }
+  const loadDashboardData = useCallback(async () => {
+    try {
+      setLoading(true);
+      const dashboardData = await getDashboardInfo();
+      setData(dashboardData);
+    } catch (error) {
+      toast({
+        title: 'Error fetching dashboard data',
+        description: 'Could not load dashboard information from the server.',
+        variant: 'destructive',
+      });
+      console.error('Failed to fetch dashboard data:', error);
+    } finally {
+      setLoading(false);
     }
-    loadDashboardData();
   }, [toast]);
+
+  useEffect(() => {
+    loadDashboardData();
+  }, [loadDashboardData]);
 
   const handleSendReminder = async (message?: string) => {
     try {
@@ -55,9 +58,56 @@ export function Dashboard() {
     }
   };
 
+  const handleTogglePause = async () => {
+    try {
+      await togglePause();
+      toast({
+        title: 'System Status Updated',
+        description: `Reminders have been ${data?.reminders_paused ? 'resumed' : 'paused'}.`,
+      });
+      await loadDashboardData();
+    } catch (error) {
+      toast({
+        title: 'Error updating status',
+        description: 'Could not update the pause status.',
+        variant: 'destructive',
+      });
+      console.error(error);
+    }
+  };
+
+  const handleSkipTurn = async () => {
+    try {
+        await skipTurn();
+        toast({
+            title: 'Turn Skipped',
+            description: 'The current turn has been skipped successfully.',
+        });
+        await loadDashboardData();
+    } catch (error) {
+        toast({
+            title: 'Error Skipping Turn',
+            description: 'Could not skip the current turn.',
+            variant: 'destructive',
+        });
+        console.error('Failed to skip turn:', error);
+    }
+  };
+
   return (
     <div className="space-y-8">
-      <h1 className="text-3xl font-bold">Dashboard</h1>
+      <div className="flex items-start justify-between">
+        <h1 className="text-3xl font-bold">Dashboard</h1>
+        <div className="flex items-center space-x-2">
+            <Switch
+                id="pause-reminders"
+                checked={data?.reminders_paused ?? false}
+                onCheckedChange={handleTogglePause}
+                disabled={loading}
+            />
+            <Label htmlFor="pause-reminders">Pause All Reminders</Label>
+        </div>
+      </div>
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader>
@@ -84,8 +134,8 @@ export function Dashboard() {
           </CardContent>
         </Card>
         <Card>
-          <CardHeader>
-            <CardTitle>System Status</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-base font-medium">System Status</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">Last reminder run:</p>
@@ -95,6 +145,11 @@ export function Dashboard() {
              <p className="text-lg font-semibold">{data?.system_status?.last_reminder_run || 'N/A'}</p>
             )}
           </CardContent>
+           <CardFooter>
+                <Button variant="outline" onClick={handleSkipTurn} disabled={loading}>
+                    Skip Current Turn
+                </Button>
+            </CardFooter>
         </Card>
       </div>
 
