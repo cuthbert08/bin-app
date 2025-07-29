@@ -22,7 +22,7 @@ export function Sidebar() {
   const filteredNavItems = navItems.filter(item => hasRole(item.roles));
 
   return (
-    <aside className="w-64 flex-shrink-0 bg-card border-r">
+    <aside className="w-full h-full flex-shrink-0 bg-card border-r">
       <div className="flex flex-col h-full">
         <div className="h-16 flex items-center px-6 border-b">
           <Link href="/" className="flex items-center gap-2 font-semibold text-lg">

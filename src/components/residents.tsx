@@ -25,7 +25,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { getResidents, addResident, updateResident, deleteResident, setCurrentTurn } from '@/lib/api';
 import { type Resident } from '@/lib/types';
-import { Pencil, Trash2, CheckCircle } from 'lucide-react';
+import { Pencil, Trash2, CheckCircle, MoreVertical } from 'lucide-react';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -39,6 +39,8 @@ import {
 } from "@/components/ui/alert-dialog"
 import { useAuth } from '@/contexts/AuthContext';
 import { Textarea } from './ui/textarea';
+import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from './ui/dropdown-menu';
 
 const emptyResident: Partial<Resident> = {
   name: '',
@@ -187,81 +189,159 @@ export function Residents() {
         <h1 className="text-3xl font-bold">Residents</h1>
         {canPerformAction && <Button onClick={() => handleOpenDialog()}>Add New Resident</Button>}
       </div>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Flat</TableHead>
-            <TableHead>Name</TableHead>
-            <TableHead>WhatsApp</TableHead>
-            <TableHead>Email</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {loading ? (
-            Array.from({ length: 3 }).map((_, i) => (
-              <TableRow key={i}>
-                <TableCell><Skeleton className="h-6 w-16" /></TableCell>
-                <TableCell><Skeleton className="h-6 w-32" /></TableCell>
-                <TableCell><Skeleton className="h-6 w-28" /></TableCell>
-                <TableCell><Skeleton className="h-6 w-40" /></TableCell>
-                <TableCell className="text-right"><Skeleton className="h-8 w-32" /></TableCell>
-              </TableRow>
-            ))
-          ) : residents.length > 0 ? (
-            residents.map((resident) => (
-              <TableRow key={resident.id}>
-                <TableCell>{resident.flat_number}</TableCell>
-                <TableCell>{resident.name}</TableCell>
-                <TableCell>{resident.contact.whatsapp || 'N/A'}</TableCell>
-                <TableCell>{resident.contact.email || 'N/A'}</TableCell>
-                <TableCell className="text-right space-x-1">
-                    {canPerformAction && (
-                      <>
-                        <Button variant="outline" size="sm" onClick={() => handleSetCurrent(resident)}>
-                            <CheckCircle className="mr-2 h-4 w-4"/>
-                            Set as Current
-                        </Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(resident)}>
-                            <Pencil />
-                            <span className="sr-only">Edit</span>
-                        </Button>
-                        <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                                <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
-                                    <Trash2 />
-                                    <span className="sr-only">Delete</span>
-                                </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                                <AlertDialogHeader>
-                                <AlertDialogTitle>Are you sure you want to delete this resident?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                    This action cannot be undone.
-                                </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => handleDeleteResident(resident.id)}>
-                                    Delete
-                                </AlertDialogAction>
-                                </AlertDialogFooter>
-                            </AlertDialogContent>
-                        </AlertDialog>
-                      </>
-                    )}
+
+      {/* Desktop View */}
+      <div className="hidden md:block">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Flat</TableHead>
+              <TableHead>Name</TableHead>
+              <TableHead>WhatsApp</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {loading ? (
+              Array.from({ length: 3 }).map((_, i) => (
+                <TableRow key={i}>
+                  <TableCell><Skeleton className="h-6 w-16" /></TableCell>
+                  <TableCell><Skeleton className="h-6 w-32" /></TableCell>
+                  <TableCell><Skeleton className="h-6 w-28" /></TableCell>
+                  <TableCell><Skeleton className="h-6 w-40" /></TableCell>
+                  <TableCell className="text-right"><Skeleton className="h-8 w-32" /></TableCell>
+                </TableRow>
+              ))
+            ) : residents.length > 0 ? (
+              residents.map((resident) => (
+                <TableRow key={resident.id}>
+                  <TableCell>{resident.flat_number}</TableCell>
+                  <TableCell>{resident.name}</TableCell>
+                  <TableCell>{resident.contact.whatsapp || 'N/A'}</TableCell>
+                  <TableCell>{resident.contact.email || 'N/A'}</TableCell>
+                  <TableCell className="text-right space-x-1">
+                      {canPerformAction && (
+                        <>
+                          <Button variant="outline" size="sm" onClick={() => handleSetCurrent(resident)}>
+                              <CheckCircle className="mr-2 h-4 w-4"/>
+                              Set as Current
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(resident)}>
+                              <Pencil />
+                              <span className="sr-only">Edit</span>
+                          </Button>
+                          <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
+                                      <Trash2 />
+                                      <span className="sr-only">Delete</span>
+                                  </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                  <AlertDialogTitle>Are you sure you want to delete this resident?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                      This action cannot be undone.
+                                  </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => handleDeleteResident(resident.id)}>
+                                      Delete
+                                  </AlertDialogAction>
+                                  </AlertDialogFooter>
+                              </AlertDialogContent>
+                          </AlertDialog>
+                        </>
+                      )}
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center">
+                  No residents found.
                 </TableCell>
               </TableRow>
-            ))
-          ) : (
-            <TableRow>
-              <TableCell colSpan={5} className="text-center">
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
+      {/* Mobile View */}
+      <div className="grid gap-4 md:hidden">
+        {loading ? (
+           Array.from({ length: 3 }).map((_, i) => (
+            <Card key={i}>
+                <CardContent className="p-4">
+                  <Skeleton className="h-24 w-full" />
+                </CardContent>
+            </Card>
+          ))
+        ) : residents.length > 0 ? (
+          residents.map((resident) => (
+            <Card key={resident.id}>
+              <CardHeader className="flex flex-row items-start justify-between">
+                <div>
+                    <CardTitle>{resident.name}</CardTitle>
+                    <p className="text-sm text-muted-foreground">Flat {resident.flat_number}</p>
+                </div>
+                {canPerformAction && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon">
+                        <MoreVertical />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                       <DropdownMenuItem onClick={() => handleSetCurrent(resident)}>
+                          <CheckCircle className="mr-2"/> Set as Current
+                       </DropdownMenuItem>
+                       <DropdownMenuItem onClick={() => handleOpenDialog(resident)}>
+                          <Pencil className="mr-2"/> Edit
+                       </DropdownMenuItem>
+                        <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                  <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive">
+                                      <Trash2 className="mr-2"/> Delete
+                                  </DropdownMenuItem>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                  <AlertDialogTitle>Are you sure you want to delete this resident?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                      This action cannot be undone.
+                                  </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => handleDeleteResident(resident.id)}>
+                                      Delete
+                                  </AlertDialogAction>
+                                  </AlertDialogFooter>
+                              </AlertDialogContent>
+                          </AlertDialog>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm">
+                  <b>WhatsApp:</b> {resident.contact.whatsapp || 'N/A'}
+                </p>
+                <p className="text-sm">
+                  <b>Email:</b> {resident.contact.email || 'N/A'}
+                </p>
+              </CardContent>
+            </Card>
+          ))
+        ) : (
+           <div className="text-center text-muted-foreground py-8">
                 No residents found.
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
+            </div>
+        )}
+      </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-md">

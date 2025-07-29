@@ -27,6 +27,7 @@ import {
 } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/contexts/AuthContext';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 
 const getStatusVariant = (status: string) => {
   switch (status.toLowerCase()) {
@@ -104,55 +105,105 @@ export function IssueTracker() {
     }
   }
 
+  const renderIssueList = () => {
+    if (loading) {
+      return Array.from({ length: 5 }).map((_, i) => (
+          <TableRow key={i}>
+            <TableCell colSpan={6}><Skeleton className="h-8 w-full" /></TableCell>
+          </TableRow>
+      ));
+    }
+    if (issues.length === 0) {
+      return (
+          <TableRow>
+            <TableCell colSpan={6} className="text-center">
+              No issues reported yet.
+            </TableCell>
+          </TableRow>
+      );
+    }
+    return issues.map((issue) => (
+      <TableRow key={issue.id}>
+        <TableCell>{format(new Date(issue.timestamp), 'dd MMM yyyy, HH:mm')}</TableCell>
+        <TableCell>{issue.reported_by}</TableCell>
+        <TableCell>{issue.flat_number}</TableCell>
+        <TableCell className='max-w-xs truncate'>{issue.description}</TableCell>
+        <TableCell>
+          <Badge variant={getStatusVariant(issue.status)}>{issue.status}</Badge>
+        </TableCell>
+        <TableCell className="text-right">
+          {canPerformAction && (
+            <Button variant="outline" size="sm" onClick={() => handleOpenDialog(issue)}>
+                Update Status
+            </Button>
+          )}
+        </TableCell>
+      </TableRow>
+    ))
+  }
+
   return (
     <div className="space-y-8">
       <h1 className="text-3xl font-bold">Issue Tracker</h1>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Date</TableHead>
-            <TableHead>Reported By</TableHead>
-            <TableHead>Flat</TableHead>
-            <TableHead>Description</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {loading ? (
-            Array.from({ length: 5 }).map((_, i) => (
-              <TableRow key={i}>
-                <TableCell colSpan={6}><Skeleton className="h-8 w-full" /></TableCell>
-              </TableRow>
-            ))
-          ) : issues.length > 0 ? (
-            issues.map((issue) => (
-              <TableRow key={issue.id}>
-                <TableCell>{format(new Date(issue.timestamp), 'dd MMM yyyy, HH:mm')}</TableCell>
-                <TableCell>{issue.reported_by}</TableCell>
-                <TableCell>{issue.flat_number}</TableCell>
-                <TableCell className='max-w-xs truncate'>{issue.description}</TableCell>
-                <TableCell>
-                  <Badge variant={getStatusVariant(issue.status)}>{issue.status}</Badge>
-                </TableCell>
-                <TableCell className="text-right">
-                  {canPerformAction && (
-                    <Button variant="outline" size="sm" onClick={() => handleOpenDialog(issue)}>
-                        Update Status
-                    </Button>
-                  )}
-                </TableCell>
-              </TableRow>
-            ))
-          ) : (
+
+      {/* Desktop View */}
+      <div className="hidden md:block">
+        <Table>
+          <TableHeader>
             <TableRow>
-              <TableCell colSpan={6} className="text-center">
-                No issues reported yet.
-              </TableCell>
+              <TableHead>Date</TableHead>
+              <TableHead>Reported By</TableHead>
+              <TableHead>Flat</TableHead>
+              <TableHead>Description</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
-          )}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {renderIssueList()}
+          </TableBody>
+        </Table>
+      </div>
+
+      {/* Mobile View */}
+      <div className="grid gap-4 md:hidden">
+        {loading ? (
+          Array.from({ length: 3 }).map((_, i) => (
+            <Card key={i}>
+                <CardContent className="p-4">
+                  <Skeleton className="h-24 w-full" />
+                </CardContent>
+            </Card>
+          ))
+        ) : issues.length > 0 ? (
+          issues.map((issue) => (
+            <Card key={issue.id}>
+              <CardHeader>
+                <CardTitle className="text-lg">Flat {issue.flat_number}</CardTitle>
+                <div className="flex items-center justify-between text-sm text-muted-foreground">
+                  <span>{issue.reported_by}</span>
+                  <span>{format(new Date(issue.timestamp), 'dd MMM yyyy')}</span>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm">{issue.description}</p>
+                <div className="flex items-center justify-between">
+                    <Badge variant={getStatusVariant(issue.status)}>{issue.status}</Badge>
+                    {canPerformAction && (
+                      <Button variant="outline" size="sm" onClick={() => handleOpenDialog(issue)}>
+                          Update Status
+                      </Button>
+                    )}
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        ) : (
+          <div className="text-center text-muted-foreground py-8">
+            No issues reported yet.
+          </div>
+        )}
+      </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
