@@ -1,9 +1,14 @@
 import axios from 'axios';
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const response = await axios.get('https://bin-reminder-app.vercel.app/api/dashboard');
+    const token = request.headers.get('x-access-token');
+    const response = await axios.get('https://bin-reminder-app.vercel.app/api/dashboard', {
+        headers: {
+            'x-access-token': token || ''
+        }
+    });
     return NextResponse.json(response.data);
   } catch (error) {
     if (axios.isAxiosError(error)) {

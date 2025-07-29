@@ -1,9 +1,9 @@
 import axios from 'axios';
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 
 const API_URL = 'https://bin-reminder-app.vercel.app/api/issues';
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
     try {
         const token = request.headers.get('x-access-token');
         if (!token) return new NextResponse('Unauthorized', { status: 401 });
@@ -22,7 +22,8 @@ export async function GET(request: Request) {
     }
 }
 
-export async function POST(request: Request) {
+// This is a public endpoint, no token needed
+export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
         const response = await axios.post(API_URL, body);

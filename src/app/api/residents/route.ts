@@ -1,11 +1,14 @@
 import axios from 'axios';
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 
 const API_URL = 'https://bin-reminder-app.vercel.app/api/residents';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const response = await axios.get(API_URL);
+    const token = request.headers.get('x-access-token');
+    const response = await axios.get(API_URL, {
+        headers: { 'x-access-token': token || '' }
+    });
     return NextResponse.json(response.data);
   } catch (error) {
     if (axios.isAxiosError(error)) {
@@ -17,10 +20,13 @@ export async function GET() {
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
     try {
+        const token = request.headers.get('x-access-token');
         const body = await request.json();
-        const response = await axios.post(API_URL, body);
+        const response = await axios.post(API_URL, body, {
+            headers: { 'x-access-token': token || '' }
+        });
         return NextResponse.json(response.data, { status: 201 });
     } catch (error) {
         if (axios.isAxiosError(error)) {

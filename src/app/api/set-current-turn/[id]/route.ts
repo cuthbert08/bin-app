@@ -1,11 +1,14 @@
 import axios from 'axios';
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 
 const API_BASE_URL = 'https://bin-reminder-app.vercel.app/api/set-current-turn';
 
-export async function POST(request: Request, { params }: { params: { id: string } }) {
+export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
     try {
-        const response = await axios.post(`${API_BASE_URL}/${params.id}`);
+        const token = request.headers.get('x-access-token');
+        const response = await axios.post(`${API_BASE_URL}/${params.id}`, {}, {
+            headers: { 'x-access-token': token || '' }
+        });
         return NextResponse.json(response.data);
     } catch (error) {
         if (axios.isAxiosError(error)) {

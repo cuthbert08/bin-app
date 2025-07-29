@@ -1,11 +1,14 @@
 import axios from 'axios';
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 
 const API_URL = 'https://bin-reminder-app.vercel.app/api/skip-turn';
 
-export async function POST() {
+export async function POST(request: NextRequest) {
     try {
-        const response = await axios.post(API_URL);
+        const token = request.headers.get('x-access-token');
+        const response = await axios.post(API_URL, {}, {
+            headers: { 'x-access-token': token || '' }
+        });
         return NextResponse.json(response.data);
     } catch (error) {
         if (axios.isAxiosError(error)) {
