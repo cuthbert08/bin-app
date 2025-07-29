@@ -52,8 +52,8 @@ export const triggerReminder = async (message?: string) => {
   await apiClient.post('/trigger-reminder', { message });
 };
 
-export const sendAnnouncement = async (subject: string, message: string) => {
-  await apiClient.post('/announcements', { subject, message });
+export const sendAnnouncement = async (subject: string, message: string, resident_ids: string[]) => {
+  await apiClient.post('/announcements', { subject, message, resident_ids });
 };
 
 export const setCurrentTurn = async (id: string) => {
