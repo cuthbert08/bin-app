@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode, useCa
 import { useRouter } from 'next/navigation';
 import { User } from '@/lib/types';
 import { login as apiLogin } from '@/lib/api';
+import axios from 'axios';
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -49,7 +50,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string) => {
     try {
-      const data = await apiLogin(email, password);
+      // Bypass the proxy for login since the backend allows CORS for this route
+      const response = await axios.post('https://bin-reminder-app.vercel.app/api/auth/login', { email, password });
+      const data = response.data;
+      
       if (data.token && data.user) {
         localStorage.setItem('authToken', data.token);
         localStorage.setItem('authUser', JSON.stringify(data.user));
