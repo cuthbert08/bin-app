@@ -105,7 +105,8 @@ export function Announcements() {
     }
   };
 
-  const isAllSelected = selectedResidents.size > 0 && selectedResidents.size === residents.length;
+  const isAllSelected = residents.length > 0 && selectedResidents.size === residents.length;
+  const isSendButtonDisabled = !subject || !message || selectedResidents.size === 0 || !canPerformAction;
 
   return (
     <div className="space-y-8">
@@ -138,7 +139,7 @@ export function Announcements() {
                 />
             </div>
             {canPerformAction && (
-                <Button onClick={handleSendAnnouncement} disabled={!subject || !message || selectedResidents.size === 0}>
+                <Button onClick={handleSendAnnouncement} disabled={isSendButtonDisabled}>
                 Send to Selected ({selectedResidents.size})
                 </Button>
             )}
