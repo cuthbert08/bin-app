@@ -175,7 +175,15 @@ function SystemSettings() {
     setLoading(true);
     try {
       const data = await getSettings();
-      setSettings(data);
+      // This is the self-correction logic.
+      if (typeof window !== 'undefined' && (!data.report_issue_link || data.report_issue_link.includes('your-frontend-url'))) {
+        const correctedLink = `${window.location.origin}/report`;
+        const updatedSettings = { ...data, report_issue_link: correctedLink };
+        await updateSettings(updatedSettings);
+        setSettings(updatedSettings);
+      } else {
+        setSettings(data);
+      }
     } catch (error) {
       toast({ title: 'Error fetching settings', variant: 'destructive' });
     } finally {
@@ -244,7 +252,7 @@ function SystemSettings() {
                 <Button variant="outline" size="icon" onClick={handleCopyLink} disabled={loading || !settings.report_issue_link}>
                     <Copy className="h-4 w-4" />
                 </Button>
-                {settings.report_issue_link && (
+                 {settings.report_issue_link && !settings.report_issue_link.includes('your-frontend-url') &&(
                     <Button asChild variant="outline" size="icon" disabled={loading}>
                         <Link href={settings.report_issue_link} target="_blank">
                              <ExternalLink className="h-4 w-4" />
