@@ -3,7 +3,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { User } from '@/lib/types';
-import { login as apiLogin } from '@/lib/api';
 import axios from 'axios';
 
 interface AuthContextType {
@@ -63,9 +62,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         throw new Error('Login failed: No token or user data returned.');
       }
-    } catch (error) {
-      console.error('Login error:', error);
-      throw error;
+    } catch (error: any) {
+        if (axios.isAxiosError(error) && error.response) {
+            throw new Error(error.response.data.message || 'Login failed');
+        }
+        throw new Error('An unknown error occurred during login.');
     }
   };
 
