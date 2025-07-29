@@ -56,10 +56,4 @@ export interface SystemSettings {
     announcement_template?: string;
 }
 
-export interface LogEntry {
-    id: string;
-    timestamp: string;
-    user: string;
-    action: string;
-    details: Record<string, any>;
-}
+    

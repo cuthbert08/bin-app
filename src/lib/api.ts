@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Resident, DashboardData, Issue, ReportIssueData, AdminUser, SystemSettings, LogEntry } from './types';
+import { Resident, DashboardData, Issue, ReportIssueData, AdminUser, SystemSettings } from './types';
 
 const apiClient = axios.create({
   baseURL: '/api',
@@ -61,7 +61,7 @@ export const skipTurn = async () => {
 };
 
 // Logs
-export const getLogs = async (): Promise<LogEntry[]> => {
+export const getLogs = async (): Promise<string[]> => {
   const response = await apiClient.get('/logs');
   return Array.isArray(response.data) ? response.data : [];
 };
@@ -122,3 +122,5 @@ export const updateAdmin = async (id: string, adminData: Partial<AdminUser>) => 
 export const deleteAdmin = async (id: string) => {
     await apiClient.delete(`/admins/${id}`);
 };
+
+    
