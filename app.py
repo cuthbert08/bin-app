@@ -97,13 +97,12 @@ def generate_text_message(template, resident, settings, subject=None):
     flat_number = resident.get("flat_number", "")
     owner_name = settings.get('owner_name', 'Admin')
     owner_number = settings.get('owner_contact_number', '')
-    report_link = settings.get('report_issue_link', '#')
 
     # Personalize the main message
     personalized_body = template.replace("{first_name}", first_name).replace("{flat_number}", flat_number)
     
-    # Add footer
-    footer = f"\n\nIf you have any issues, contact {owner_name} at {owner_number}.\nReport an issue: {report_link}"
+    # Add a more SMS-friendly footer
+    footer = f"\n\nContact {owner_name} at {owner_number} for issues."
     
     # Prepend subject for announcements
     if subject:
@@ -361,7 +360,7 @@ def report_issue():
     issues_link = f"{base_url}/issues"
     
     # Prepare messages for different channels
-    text_notification = f"New Issue Reported by {new_issue['reported_by']} ({new_issue['flat_number']}): {new_issue['description'][:80]}... See it here: {issues_link}"
+    text_notification = f"New Issue Reported by {new_issue['reported_by']}, Flat {new_issue['flat_number']}: {new_issue['description'][:80]}... See it here: {issues_link}"
     html_notification = generate_owner_issue_email(new_issue, settings)
 
     if owner_whatsapp: 
