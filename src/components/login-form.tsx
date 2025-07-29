@@ -93,7 +93,7 @@ export function LoginForm() {
       <CardFooter className="flex flex-col items-center justify-center pt-4">
           <Separator className="w-full mb-4" />
           <Link href="/report" passHref>
-              <Button variant="link">Report a maintenance issue</Button>
+              <Button variant="link">Report an Issue</Button>
           </Link>
       </CardFooter>
     </Card>

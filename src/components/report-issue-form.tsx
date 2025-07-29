@@ -81,7 +81,7 @@ export function ReportIssueForm() {
     return (
         <Card className="w-full max-w-lg">
             <CardHeader>
-                <CardTitle>Report a Maintenance Issue</CardTitle>
+                <CardTitle>Report an Issue</CardTitle>
                 <CardDescription>
                     Please fill out the form below to report an issue. The owner will be notified automatically.
                 </CardDescription>
