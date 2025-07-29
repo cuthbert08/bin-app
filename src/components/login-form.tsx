@@ -1,13 +1,15 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { Trash2, Eye, EyeOff } from 'lucide-react';
+import Link from 'next/link';
+import { Separator } from './ui/separator';
 
 export function LoginForm() {
   const [email, setEmail] = useState('');
@@ -88,6 +90,12 @@ export function LoginForm() {
           </Button>
         </form>
       </CardContent>
+      <CardFooter className="flex flex-col items-center justify-center pt-4">
+          <Separator className="w-full mb-4" />
+          <Link href="/report" passHref>
+              <Button variant="link">Report a maintenance issue</Button>
+          </Link>
+      </CardFooter>
     </Card>
   );
 }
