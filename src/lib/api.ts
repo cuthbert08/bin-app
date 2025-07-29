@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Resident, DashboardData, User, LoginResponse, Issue, ReportIssueData } from './types';
+import { Resident, DashboardData, Issue, ReportIssueData, AdminUser, SystemSettings } from './types';
 
 const apiClient = axios.create({
   baseURL: '/api',
@@ -63,13 +63,7 @@ export const skipTurn = async () => {
 // Logs
 export const getLogs = async (): Promise<string[]> => {
   const response = await apiClient.get('/logs');
-  if (response.data && Array.isArray(response.data.logs)) {
-      return response.data.logs;
-  }
-  if(Array.isArray(response.data)) {
-      return response.data;
-  }
-  return [];
+  return Array.isArray(response.data) ? response.data : [];
 };
 
 // Issues
@@ -86,3 +80,31 @@ export const reportIssue = async (data: ReportIssueData) => {
 export const updateIssueStatus = async (id: string, status: string) => {
     await apiClient.put(`/issues/${id}`, { status });
 }
+
+// Settings
+export const getSettings = async (): Promise<SystemSettings> => {
+    const response = await apiClient.get('/settings');
+    return response.data;
+};
+
+export const updateSettings = async (settings: SystemSettings) => {
+    await apiClient.put('/settings', settings);
+};
+
+// Admins
+export const getAdmins = async (): Promise<AdminUser[]> => {
+    const response = await apiClient.get('/admins');
+    return response.data;
+};
+
+export const addAdmin = async (adminData: Partial<AdminUser> & { password?: string }) => {
+    await apiClient.post('/admins', adminData);
+};
+
+export const updateAdmin = async (id: string, adminData: Partial<AdminUser>) => {
+    await apiClient.put(`/admins/${id}`, adminData);
+};
+
+export const deleteAdmin = async (id: string) => {
+    await apiClient.delete(`/admins/${id}`);
+};

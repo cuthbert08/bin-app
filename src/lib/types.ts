@@ -13,10 +13,11 @@ export interface Resident {
 export interface DashboardData {
   current_duty: { name: string };
   next_in_rotation: { name: string };
-  system_status: { last_reminder_run: string };
+  system_status: { last_reminder_run: string, reminders_paused: boolean };
 }
 
 export interface User {
+  id: string;
   email: string;
   role: 'superuser' | 'editor' | 'viewer';
 }
@@ -41,4 +42,16 @@ export interface ReportIssueData {
     flat_number: string;
     description: string;
     image_url?: string;
+}
+
+export type AdminUser = Omit<User, 'id'> & { id: string };
+
+export interface SystemSettings {
+    owner_name?: string;
+    owner_contact_number?: string;
+    owner_contact_email?: string;
+    owner_contact_whatsapp?: string;
+    report_issue_link?: string;
+    reminder_template?: string;
+    announcement_template?: string;
 }
