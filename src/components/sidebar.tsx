@@ -2,13 +2,14 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Users, Megaphone, Trash2, Wrench, Settings, LogOut, FileText } from 'lucide-react';
+import { Home, Users, Megaphone, Trash2, Wrench, Settings, LogOut, FileText, ListOrdered } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 
 const navItems = [
   { href: '/', label: 'Dashboard', icon: Home, roles: ['superuser', 'editor', 'viewer'] },
   { href: '/residents', label: 'Residents', icon: Users, roles: ['superuser', 'editor', 'viewer'] },
+  { href: '/rota', label: 'Rota', icon: ListOrdered, roles: ['superuser', 'editor', 'viewer'] },
   { href: '/issues', label: 'Issue Tracker', icon: Wrench, roles: ['superuser', 'editor', 'viewer'] },
   { href: '/announcements', label: 'Announcements', icon: Megaphone, roles: ['superuser', 'editor'] },
   { href: '/logs', label: 'Logs', icon: FileText, roles: ['superuser', 'editor', 'viewer'] },

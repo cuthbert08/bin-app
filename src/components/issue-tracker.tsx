@@ -12,7 +12,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import { getIssues, updateIssueStatus } from '@/lib/api';
+import { getIssues, updateIssueStatus, getPublicIssues, deleteIssues } from '@/lib/api';
 import { type Issue } from '@/lib/types';
 import { format } from 'date-fns';
 import { Button } from './ui/button';
@@ -28,6 +28,10 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Checkbox } from './ui/checkbox';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
+import { Trash2 } from 'lucide-react';
+import { Sidebar } from './sidebar';
 
 const getStatusVariant = (status: string) => {
   switch (status.toLowerCase()) {
@@ -48,15 +52,16 @@ export function IssueTracker() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedIssue, setSelectedIssue] = useState<Issue | null>(null);
   const [newStatus, setNewStatus] = useState('');
+  const [selectedIssues, setSelectedIssues] = useState<Set<string>>(new Set());
   const { toast } = useToast();
-  const { hasRole } = useAuth();
+  const { isAuthenticated, hasRole } = useAuth();
   
   const canPerformAction = hasRole(['superuser', 'editor']);
 
   const fetchIssues = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await getIssues();
+      const data = isAuthenticated ? await getIssues() : await getPublicIssues();
       setIssues(data);
     } catch (error) {
       toast({
@@ -68,7 +73,7 @@ export function IssueTracker() {
     } finally {
       setLoading(false);
     }
-  }, [toast]);
+  }, [toast, isAuthenticated]);
 
   useEffect(() => {
     fetchIssues();
@@ -105,11 +110,66 @@ export function IssueTracker() {
     }
   }
 
+  const handleSelectIssue = (issueId: string) => {
+    const newSelection = new Set(selectedIssues);
+    if (newSelection.has(issueId)) {
+        newSelection.delete(issueId);
+    } else {
+        newSelection.add(issueId);
+    }
+    setSelectedIssues(newSelection);
+  }
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+        const allIssueIds = new Set(issues.map(issue => issue.id));
+        setSelectedIssues(allIssueIds);
+    } else {
+        setSelectedIssues(new Set());
+    }
+  }
+
+  const handleDeleteSelected = async () => {
+    try {
+        await deleteIssues(Array.from(selectedIssues));
+        toast({
+            title: 'Issues Deleted',
+            description: 'The selected issues have been deleted.',
+        });
+        setSelectedIssues(new Set());
+        fetchIssues();
+    } catch (error) {
+        toast({
+            title: 'Error Deleting Issues',
+            description: 'Could not delete the selected issues.',
+            variant: 'destructive',
+        });
+        console.error(error);
+    }
+  };
+
+  const PageWrapper = ({children}: {children: React.ReactNode}) => {
+    if (isAuthenticated) {
+      return (
+        <div className="flex h-full w-full">
+            <div className="hidden lg:block w-64 flex-shrink-0">
+                <Sidebar />
+            </div>
+            <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
+              {children}
+            </main>
+        </div>
+      )
+    }
+    return <div className="p-4 sm:p-6 lg:p-8">{children}</div>;
+  }
+
   const renderIssueList = () => {
     if (loading) {
       return Array.from({ length: 5 }).map((_, i) => (
           <TableRow key={i}>
-            <TableCell colSpan={6}><Skeleton className="h-8 w-full" /></TableCell>
+            {canPerformAction && <TableCell><Skeleton className="h-5 w-5" /></TableCell>}
+            <TableCell colSpan={canPerformAction ? 5 : 6}><Skeleton className="h-8 w-full" /></TableCell>
           </TableRow>
       ));
     }
@@ -124,6 +184,15 @@ export function IssueTracker() {
     }
     return issues.map((issue) => (
       <TableRow key={issue.id}>
+        {canPerformAction && (
+            <TableCell>
+                <Checkbox
+                    checked={selectedIssues.has(issue.id)}
+                    onCheckedChange={() => handleSelectIssue(issue.id)}
+                    aria-label={`Select issue ${issue.id}`}
+                />
+            </TableCell>
+        )}
         <TableCell>{format(new Date(issue.timestamp), 'dd MMM yyyy, HH:mm')}</TableCell>
         <TableCell>{issue.reported_by}</TableCell>
         <TableCell>{issue.flat_number}</TableCell>
@@ -131,108 +200,143 @@ export function IssueTracker() {
         <TableCell>
           <Badge variant={getStatusVariant(issue.status)}>{issue.status}</Badge>
         </TableCell>
-        <TableCell className="text-right">
-          {canPerformAction && (
-            <Button variant="outline" size="sm" onClick={() => handleOpenDialog(issue)}>
-                Update Status
-            </Button>
-          )}
-        </TableCell>
+        {canPerformAction && (
+          <TableCell className="text-right">
+              <Button variant="outline" size="sm" onClick={() => handleOpenDialog(issue)}>
+                  Update Status
+              </Button>
+          </TableCell>
+        )}
       </TableRow>
     ))
   }
 
   return (
-    <div className="space-y-8">
-      <h1 className="text-3xl font-bold">Issue Tracker</h1>
+    <PageWrapper>
+      <div className="space-y-8">
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold">Issue Tracker</h1>
+          {canPerformAction && selectedIssues.size > 0 && (
+            <AlertDialog>
+                <AlertDialogTrigger asChild>
+                    <Button variant="destructive">
+                        <Trash2 className="mr-2"/>
+                        Delete ({selectedIssues.size})
+                    </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        This action cannot be undone. This will permanently delete {selectedIssues.size} issue(s).
+                    </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDeleteSelected}>Delete</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+          )}
+        </div>
 
-      {/* Desktop View */}
-      <div className="hidden md:block">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Date</TableHead>
-              <TableHead>Reported By</TableHead>
-              <TableHead>Flat</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {renderIssueList()}
-          </TableBody>
-        </Table>
-      </div>
+        {/* Desktop View */}
+        <div className="hidden md:block">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                {canPerformAction && (
+                    <TableHead className="w-[50px]">
+                        <Checkbox
+                            checked={selectedIssues.size > 0 && selectedIssues.size === issues.length}
+                            onCheckedChange={(checked) => handleSelectAll(!!checked)}
+                            aria-label="Select all issues"
+                        />
+                    </TableHead>
+                )}
+                <TableHead>Date</TableHead>
+                <TableHead>Reported By</TableHead>
+                <TableHead>Flat</TableHead>
+                <TableHead>Description</TableHead>
+                <TableHead>Status</TableHead>
+                {canPerformAction && <TableHead className="text-right">Actions</TableHead>}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {renderIssueList()}
+            </TableBody>
+          </Table>
+        </div>
 
-      {/* Mobile View */}
-      <div className="grid gap-4 md:hidden">
-        {loading ? (
-          Array.from({ length: 3 }).map((_, i) => (
-            <Card key={i}>
-                <CardContent className="p-4">
-                  <Skeleton className="h-24 w-full" />
+        {/* Mobile View */}
+        <div className="grid gap-4 md:hidden">
+          {loading ? (
+            Array.from({ length: 3 }).map((_, i) => (
+              <Card key={i}>
+                  <CardContent className="p-4">
+                    <Skeleton className="h-24 w-full" />
+                  </CardContent>
+              </Card>
+            ))
+          ) : issues.length > 0 ? (
+            issues.map((issue) => (
+              <Card key={issue.id}>
+                <CardHeader>
+                  <CardTitle className="text-lg">Flat {issue.flat_number}</CardTitle>
+                  <div className="flex items-center justify-between text-sm text-muted-foreground">
+                    <span>{issue.reported_by}</span>
+                    <span>{format(new Date(issue.timestamp), 'dd MMM yyyy')}</span>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <p className="text-sm">{issue.description}</p>
+                  <div className="flex items-center justify-between">
+                      <Badge variant={getStatusVariant(issue.status)}>{issue.status}</Badge>
+                      {canPerformAction && (
+                        <Button variant="outline" size="sm" onClick={() => handleOpenDialog(issue)}>
+                            Update Status
+                        </Button>
+                      )}
+                  </div>
                 </CardContent>
-            </Card>
-          ))
-        ) : issues.length > 0 ? (
-          issues.map((issue) => (
-            <Card key={issue.id}>
-              <CardHeader>
-                <CardTitle className="text-lg">Flat {issue.flat_number}</CardTitle>
-                <div className="flex items-center justify-between text-sm text-muted-foreground">
-                  <span>{issue.reported_by}</span>
-                  <span>{format(new Date(issue.timestamp), 'dd MMM yyyy')}</span>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <p className="text-sm">{issue.description}</p>
-                <div className="flex items-center justify-between">
-                    <Badge variant={getStatusVariant(issue.status)}>{issue.status}</Badge>
-                    {canPerformAction && (
-                      <Button variant="outline" size="sm" onClick={() => handleOpenDialog(issue)}>
-                          Update Status
-                      </Button>
-                    )}
-                </div>
-              </CardContent>
-            </Card>
-          ))
-        ) : (
-          <div className="text-center text-muted-foreground py-8">
-            No issues reported yet.
-          </div>
-        )}
-      </div>
-
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
-            <DialogHeader>
-                <DialogTitle>Update Issue Status</DialogTitle>
-                <DialogDescription>
-                    Update the status for the issue reported by {selectedIssue?.reported_by}.
-                </DialogDescription>
-            </DialogHeader>
-            <div className="py-4">
-                <Select value={newStatus} onValueChange={setNewStatus}>
-                    <SelectTrigger>
-                        <SelectValue placeholder="Select a status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="Reported">Reported</SelectItem>
-                        <SelectItem value="In Progress">In Progress</SelectItem>
-                        <SelectItem value="Resolved">Resolved</SelectItem>
-                    </SelectContent>
-                </Select>
+              </Card>
+            ))
+          ) : (
+            <div className="text-center text-muted-foreground py-8">
+              No issues reported yet.
             </div>
-            <DialogFooter>
-                <DialogClose asChild>
-                    <Button type="button" variant="secondary">Cancel</Button>
-                </DialogClose>
-                <Button type="submit" onClick={handleUpdateStatus}>Save Changes</Button>
-            </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
+          )}
+        </div>
+
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogContent>
+              <DialogHeader>
+                  <DialogTitle>Update Issue Status</DialogTitle>
+                  <DialogDescription>
+                      Update the status for the issue reported by {selectedIssue?.reported_by}.
+                  </DialogDescription>
+              </DialogHeader>
+              <div className="py-4">
+                  <Select value={newStatus} onValueChange={setNewStatus}>
+                      <SelectTrigger>
+                          <SelectValue placeholder="Select a status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                          <SelectItem value="Reported">Reported</SelectItem>
+                          <SelectItem value="In Progress">In Progress</SelectItem>
+                          <SelectItem value="Resolved">Resolved</SelectItem>
+                      </SelectContent>
+                  </Select>
+              </div>
+              <DialogFooter>
+                  <DialogClose asChild>
+                      <Button type="button" variant="secondary">Cancel</Button>
+                  </DialogClose>
+                  <Button type="submit" onClick={handleUpdateStatus}>Save Changes</Button>
+              </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
+    </PageWrapper>
   );
 }

@@ -43,6 +43,10 @@ export const deleteResident = async (id: string) => {
     await apiClient.delete(`/residents/${id}`);
 };
 
+export const updateResidentsOrder = async (residents: Resident[]) => {
+    await apiClient.put('/residents/order', { residents });
+};
+
 // System Actions
 export const triggerReminder = async (message?: string) => {
   await apiClient.post('/trigger-reminder', { message });
@@ -66,9 +70,18 @@ export const getLogs = async (): Promise<string[]> => {
   return Array.isArray(response.data) ? response.data : [];
 };
 
+export const deleteLogs = async (logs: string[]): Promise<void> => {
+    await apiClient.delete('/logs', { data: { logs } });
+};
+
 // Issues
 export const getIssues = async (): Promise<Issue[]> => {
     const response = await apiClient.get('/issues');
+    return response.data;
+};
+
+export const getPublicIssues = async (): Promise<Issue[]> => {
+    const response = await apiClient.get('/issues/public');
     return response.data;
 };
 
@@ -80,6 +93,10 @@ export const reportIssue = async (data: ReportIssueData) => {
 export const updateIssueStatus = async (id: string, status: string) => {
     await apiClient.put(`/issues/${id}`, { status });
 }
+
+export const deleteIssues = async (ids: string[]): Promise<void> => {
+    await apiClient.delete('/issues', { data: { ids } });
+};
 
 // Settings
 export const getSettings = async (): Promise<SystemSettings> => {
