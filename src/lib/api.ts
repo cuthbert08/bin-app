@@ -84,11 +84,5 @@ export const reportIssue = async (data: ReportIssueData) => {
 }
 
 export const updateIssueStatus = async (id: string, status: string) => {
-    // This endpoint doesn't exist yet in the backend spec,
-    // so this is a placeholder for when it does.
-    // For now, we simulate success.
-    console.log(`Updating issue ${id} to ${status}`);
-    // In a real app, you would have:
-    // await apiClient.put(`/issues/${id}/status`, { status });
-    return Promise.resolve();
+    await apiClient.put(`/issues/${id}`, { status });
 }
