@@ -121,7 +121,7 @@ export function Logs() {
             ) : sortedLogs.length > 0 ? (
               sortedLogs.map((log) => (
                 <TableRow key={log.id}>
-                  <TableCell>{format(new Date(log.timestamp), 'dd MMM yyyy, HH:mm:ss')}</TableCell>
+                  <TableCell>{format(new Date(log.timestamp), 'dd MMM yyyy, HH:mm')}</TableCell>
                   <TableCell>{log.user}</TableCell>
                   <TableCell>{log.action}</TableCell>
                   <TableCell className="text-right">
