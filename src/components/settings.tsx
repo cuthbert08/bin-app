@@ -12,7 +12,7 @@ import { getSettings, updateSettings, getAdmins, addAdmin, updateAdmin, deleteAd
 import { type SystemSettings, type AdminUser } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
-import { Pencil, Trash2, PlusCircle } from 'lucide-react';
+import { Pencil, Trash2, PlusCircle, Copy } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from './ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
@@ -170,6 +170,7 @@ function AdminManagement() {
 function SystemSettings() {
   const [settings, setSettings] = useState<SystemSettings>({});
   const [loading, setLoading] = useState(true);
+  const [shareableLink, setShareableLink] = useState('');
   const { toast } = useToast();
 
   const fetchSettings = useCallback(async () => {
@@ -186,6 +187,8 @@ function SystemSettings() {
 
   useEffect(() => {
     fetchSettings();
+    // Construct the shareable link on the client side
+    setShareableLink(`${window.location.origin}/report`);
   }, [fetchSettings]);
 
   const handleSave = async () => {
@@ -201,6 +204,11 @@ function SystemSettings() {
     setSettings(prev => ({ ...prev, [key]: value }));
   };
 
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(shareableLink);
+    toast({ title: 'Link Copied!', description: 'The report link has been copied to your clipboard.'});
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -208,6 +216,23 @@ function SystemSettings() {
         <CardDescription>Configure system-wide settings.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
+        <div className="space-y-2">
+            <Label>Shareable Report Link</Label>
+             <div className="flex items-center space-x-2">
+                <Input
+                    id="shareableLink"
+                    value={shareableLink}
+                    readOnly
+                    className="flex-1"
+                />
+                <Button variant="outline" size="icon" onClick={handleCopyLink}>
+                    <Copy className="h-4 w-4" />
+                </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+                Share this link with residents so they can report issues.
+            </p>
+        </div>
         <div className="space-y-2">
             <Label htmlFor="ownerName">Owner Name</Label>
             <Input id="ownerName" value={settings.owner_name || ''} onChange={e => handleChange('owner_name', e.target.value)} disabled={loading} />
@@ -225,7 +250,7 @@ function SystemSettings() {
             <Input id="ownerContactEmail" type="email" value={settings.owner_contact_email || ''} onChange={e => handleChange('owner_contact_email', e.target.value)} disabled={loading} />
         </div>
         <div className="space-y-2">
-            <Label htmlFor="reportLink">Report Issue Link</Label>
+            <Label htmlFor="reportLink">Report Issue Link (for Emails)</Label>
             <Input id="reportLink" value={settings.report_issue_link || ''} onChange={e => handleChange('report_issue_link', e.target.value)} disabled={loading} />
         </div>
         <div className="space-y-2">
