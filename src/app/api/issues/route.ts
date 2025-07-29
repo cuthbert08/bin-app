@@ -1,0 +1,38 @@
+import axios from 'axios';
+import { NextResponse } from 'next/server';
+
+const API_URL = 'https://bin-reminder-app.vercel.app/api/issues';
+
+export async function GET(request: Request) {
+    try {
+        const token = request.headers.get('x-access-token');
+        if (!token) return new NextResponse('Unauthorized', { status: 401 });
+        
+        const response = await axios.get(API_URL, {
+            headers: { 'x-access-token': token }
+        });
+        return NextResponse.json(response.data);
+    } catch (error) {
+        if (axios.isAxiosError(error)) {
+            return new NextResponse(error.response?.data?.message || 'Error fetching issues', {
+                status: error.response?.status || 500,
+            });
+        }
+        return new NextResponse('An unexpected error occurred', { status: 500 });
+    }
+}
+
+export async function POST(request: Request) {
+    try {
+        const body = await request.json();
+        const response = await axios.post(API_URL, body);
+        return NextResponse.json(response.data);
+    } catch (error) {
+        if (axios.isAxiosError(error)) {
+            return new NextResponse(error.response?.data?.message || 'Error reporting issue', {
+                status: error.response?.status || 500,
+            });
+        }
+        return new NextResponse('An unexpected error occurred', { status: 500 });
+    }
+}

@@ -8,11 +8,13 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { sendAnnouncement } from '@/lib/api';
+import { useAuth } from '@/contexts/AuthContext';
 
 export function Announcements() {
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
   const { toast } = useToast();
+  const { hasRole } = useAuth();
 
   const handleSendAnnouncement = async () => {
     if (!subject || !message) {
@@ -42,6 +44,8 @@ export function Announcements() {
     }
   };
 
+  const canPerformAction = hasRole(['superuser', 'editor']);
+
   return (
     <div className="space-y-8">
       <h1 className="text-3xl font-bold">Announcements</h1>
@@ -57,6 +61,7 @@ export function Announcements() {
               placeholder="e.g., Water Outage"
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
+              disabled={!canPerformAction}
             />
           </div>
           <div className="space-y-2">
@@ -66,11 +71,14 @@ export function Announcements() {
               placeholder="Enter your announcement message here..."
               value={message}
               onChange={(e) => setMessage(e.target.value)}
+              disabled={!canPerformAction}
             />
           </div>
-          <Button onClick={handleSendAnnouncement} disabled={!subject || !message}>
-            Send Announcement to All
-          </Button>
+          {canPerformAction && (
+            <Button onClick={handleSendAnnouncement} disabled={!subject || !message}>
+              Send Announcement to All
+            </Button>
+          )}
         </CardContent>
       </Card>
     </div>

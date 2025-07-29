@@ -1,7 +1,5 @@
-'use client';
-
 import axios from 'axios';
-import { Resident, DashboardData } from './types';
+import { Resident, DashboardData, User, LoginResponse, Issue, ReportIssueData } from './types';
 
 const apiClient = axios.create({
   baseURL: '/api',
@@ -9,6 +7,24 @@ const apiClient = axios.create({
     'Content-Type': 'application/json',
   },
 });
+
+apiClient.interceptors.request.use((config) => {
+    if (typeof window !== 'undefined') {
+        const token = localStorage.getItem('authToken');
+        if (token) {
+            config.headers['x-access-token'] = token;
+        }
+    }
+    return config;
+}, (error) => {
+    return Promise.reject(error);
+});
+
+// Auth
+export const login = async (email: string, password: string): Promise<LoginResponse> => {
+    const response = await apiClient.post('/auth/login', { email, password });
+    return response.data;
+}
 
 // Dashboard
 export const getDashboardInfo = async (): Promise<DashboardData> => {
@@ -27,7 +43,7 @@ export const addResident = async (resident: Omit<Resident, 'id'>) => {
   return response.data;
 };
 
-export const updateResident = async (id: string, residentUpdate: Partial<Omit<Resident, 'id'>>) => {
+export const updateResident = async (id: string, residentUpdate: Partial<Resident>) => {
   await apiClient.put(`/residents/${id}`, residentUpdate);
 };
 
@@ -63,3 +79,24 @@ export const getLogs = async (): Promise<string[]> => {
   }
   return [];
 };
+
+// Issues
+export const getIssues = async (): Promise<Issue[]> => {
+    const response = await apiClient.get('/issues');
+    return response.data;
+};
+
+export const reportIssue = async (data: ReportIssueData) => {
+    const response = await apiClient.post('/issues', data);
+    return response.data;
+}
+
+export const updateIssueStatus = async (id: string, status: string) => {
+    // This endpoint doesn't exist yet in the backend spec,
+    // so this is a placeholder for when it does.
+    // For now, we simulate success.
+    console.log(`Updating issue ${id} to ${status}`);
+    // In a real app, you would have:
+    // await apiClient.put(`/issues/${id}/status`, { status });
+    return Promise.resolve();
+}

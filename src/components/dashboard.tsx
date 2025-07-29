@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format, nextWednesday, addDays } from 'date-fns';
 import { AlertTriangle } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 export function Dashboard() {
   const [data, setData] = useState<DashboardData | null>(null);
@@ -17,6 +18,7 @@ export function Dashboard() {
   const [error, setError] = useState<string | null>(null);
   const [customMessage, setCustomMessage] = useState('');
   const { toast } = useToast();
+  const { hasRole } = useAuth();
 
   const loadDashboardData = useCallback(async () => {
     setLoading(true);
@@ -41,6 +43,8 @@ export function Dashboard() {
   useEffect(() => {
     loadDashboardData();
   }, [loadDashboardData]);
+
+  const canPerformAction = hasRole(['superuser', 'editor']);
 
   const handleSendReminder = async (message?: string) => {
     try {
@@ -83,7 +87,7 @@ export function Dashboard() {
   const currentDutyDate = nextWednesday(new Date());
   const nextDutyDate = addDays(currentDutyDate, 7);
 
-  const renderCardContent = (value: string | undefined, date: Date) => {
+  const renderCardContent = (value: string | undefined, date?: Date) => {
     if (loading) {
       return (
         <div className="space-y-2">
@@ -103,7 +107,7 @@ export function Dashboard() {
     return (
       <div>
         <p className="text-2xl font-bold">{value || 'N/A'}</p>
-        <p className="text-sm text-muted-foreground">{format(date, 'dd-MM-yyyy')}</p>
+        {date && <p className="text-sm text-muted-foreground">{format(date, 'dd-MM-yyyy')}</p>}
       </div>
     );
   };
@@ -149,11 +153,13 @@ export function Dashboard() {
               </>
             )}
           </CardContent>
-           <CardFooter>
-                <Button variant="outline" onClick={handleSkipTurn} disabled={loading || !!error}>
-                    Skip Current Turn
-                </Button>
-            </CardFooter>
+           {canPerformAction && (
+             <CardFooter>
+                  <Button variant="outline" onClick={handleSkipTurn} disabled={loading || !!error}>
+                      Skip Current Turn
+                  </Button>
+              </CardFooter>
+            )}
         </Card>
       </div>
 
@@ -166,7 +172,9 @@ export function Dashboard() {
             <p className="text-muted-foreground">
               Send the standard weekly reminder to the person currently on duty.
             </p>
-            <Button onClick={() => handleSendReminder()} disabled={loading || !!error}>Send Reminder</Button>
+            {canPerformAction && (
+              <Button onClick={() => handleSendReminder()} disabled={loading || !!error}>Send Reminder</Button>
+            )}
           </CardContent>
         </Card>
         <Card>
@@ -175,12 +183,14 @@ export function Dashboard() {
           </CardHeader>
           <CardContent className="space-y-4">
             <Textarea
-              placeholder="Enter your custom reminder message here..."
+              placeholder={canPerformAction ? "Enter your custom reminder message here..." : "You do not have permission to send custom reminders."}
               value={customMessage}
               onChange={(e) => setCustomMessage(e.target.value)}
-              disabled={loading || !!error}
+              disabled={loading || !!error || !canPerformAction}
             />
-            <Button onClick={() => handleSendReminder(customMessage)} disabled={!customMessage || loading || !!error}>Send Custom Reminder</Button>
+            {canPerformAction && (
+              <Button onClick={() => handleSendReminder(customMessage)} disabled={!customMessage || loading || !!error}>Send Custom Reminder</Button>
+            )}
           </CardContent>
         </Card>
       </div>

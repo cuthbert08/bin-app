@@ -1,7 +1,9 @@
+import ProtectedLayout from '@/components/ProtectedLayout';
+
 export default function AnnouncementsLayout({
     children,
 }: {
     children: React.ReactNode;
 }) {
-    return <>{children}</>;
+    return <ProtectedLayout>{children}</ProtectedLayout>;
 }

@@ -1,8 +1,8 @@
 import type {Metadata} from 'next';
 import {Toaster} from '@/components/ui/toaster';
 import './globals.css';
-import {Sidebar} from '@/components/sidebar';
 import { cn } from '@/lib/utils';
+import { AuthProvider } from '@/contexts/AuthContext';
 
 export const metadata: Metadata = {
   title: 'Bin Reminder',
@@ -25,12 +25,9 @@ export default function RootLayout({
         ></link>
       </head>
       <body className={cn('font-sans antialiased h-full bg-background text-foreground')}>
-        <div className="flex h-full">
-          <Sidebar />
-          <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
-            {children}
-          </main>
-        </div>
+        <AuthProvider>
+          {children}
+        </AuthProvider>
         <Toaster />
       </body>
     </html>

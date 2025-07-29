@@ -1,6 +1,6 @@
 import ProtectedLayout from '@/components/ProtectedLayout';
 
-export default function ResidentsLayout({
+export default function SettingsLayout({
     children,
 }: {
     children: React.ReactNode;
