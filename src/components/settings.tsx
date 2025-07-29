@@ -52,7 +52,7 @@ function AdminManagement() {
     if (!editingAdmin) return;
     try {
       if (editingAdmin.id) {
-        await updateAdmin(editingAdmin.id, { email: editingAdmin.email, role: editingAdmin.role });
+        await updateAdmin(editingAdmin.id, { email: editingAdmin.email, role: editingAdmin.role, password: editingAdmin.password });
         toast({ title: 'Admin updated' });
       } else {
         await addAdmin(editingAdmin);
@@ -99,7 +99,7 @@ function AdminManagement() {
                   <TableCell>{admin.email}</TableCell>
                   <TableCell><Badge variant={admin.role === 'superuser' ? 'default' : 'secondary'}>{admin.role}</Badge></TableCell>
                   <TableCell className="text-right space-x-2">
-                    <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(admin)} disabled={admin.id === currentUser?.id}>
+                    <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(admin)}>
                       <Pencil />
                     </Button>
                     <AlertDialog>
@@ -151,12 +151,10 @@ function AdminManagement() {
                 </SelectContent>
               </Select>
             </div>
-            {!editingAdmin?.id && (
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input id="password" type="password" value={editingAdmin?.password || ''} onChange={(e) => setEditingAdmin({...editingAdmin, password: e.target.value})} />
+             <div className="space-y-2">
+                <Label htmlFor="password">New Password</Label>
+                <Input id="password" type="password" placeholder={editingAdmin?.id ? 'Leave blank to keep current password' : ''} value={editingAdmin?.password || ''} onChange={(e) => setEditingAdmin({...editingAdmin, password: e.target.value})} />
               </div>
-            )}
           </div>
           <DialogFooter>
             <DialogClose asChild><Button variant="secondary">Cancel</Button></DialogClose>
@@ -177,10 +175,6 @@ function SystemSettings() {
     setLoading(true);
     try {
       const data = await getSettings();
-      // Ensure the report issue link is set for new setups
-      if (!data.report_issue_link && typeof window !== 'undefined') {
-          data.report_issue_link = `${window.location.origin}/report`;
-      }
       setSettings(data);
     } catch (error) {
       toast({ title: 'Error fetching settings', variant: 'destructive' });
@@ -259,7 +253,7 @@ function SystemSettings() {
                 )}
             </div>
             <p className="text-xs text-muted-foreground">
-                This public link takes users to a form on this site, which then securely forwards the data to your backend. It is used in all communications.
+                This public link is automatically generated and points to this site's issue form, which then securely forwards the data to your backend.
             </p>
         </div>
         <div className="space-y-2">
