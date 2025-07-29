@@ -1,26 +1,7 @@
 import axios from 'axios';
 import { NextResponse, NextRequest } from 'next/server';
-import { Readable } from 'stream';
 
 const API_URL = 'https://bin-reminder-app.vercel.app/api/documents/upload';
-
-// Helper function to convert a ReadableStream to a Buffer
-async function streamToBuffer(stream: ReadableStream<Uint8Array>): Promise<Buffer> {
-    const reader = stream.getReader();
-    const chunks: Uint8Array[] = [];
-
-    while (true) {
-        const { done, value } = await reader.read();
-        if (done) {
-            break;
-        }
-        if (value) {
-            chunks.push(value);
-        }
-    }
-
-    return Buffer.concat(chunks);
-}
 
 export async function POST(request: NextRequest) {
     try {
@@ -31,19 +12,11 @@ export async function POST(request: NextRequest) {
             return new NextResponse('No file found in the request', { status: 400 });
         }
         
-        // We need to forward the multipart data to the Python service.
-        // The easiest way is to re-create the FormData and let axios handle headers.
-        const backendFormData = new FormData();
-        
-        // Convert the file stream to a Blob so we can append it with a filename
-        const fileBuffer = await streamToBuffer(file.stream());
-        const fileBlob = new Blob([fileBuffer], { type: file.type });
-
-        backendFormData.append('file', fileBlob, file.name);
-
-        const response = await axios.post(API_URL, backendFormData, {
+        // Stream the file content directly to the backend
+        const response = await axios.post(API_URL, file.stream(), {
             headers: {
-                // Axios will set the 'Content-Type' to 'multipart/form-data' with the correct boundary
+                'Content-Type': file.type,
+                'X-File-Name': file.name, // Send filename in a custom header
             },
         });
         
