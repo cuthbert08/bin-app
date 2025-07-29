@@ -12,11 +12,12 @@ import { getSettings, updateSettings, getAdmins, addAdmin, updateAdmin, deleteAd
 import { type SystemSettings, type AdminUser } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
-import { Pencil, Trash2, PlusCircle, Copy } from 'lucide-react';
+import { Pencil, Trash2, PlusCircle, Copy, ExternalLink } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from './ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
+import Link from 'next/link';
 
 function AdminManagement() {
   const [admins, setAdmins] = useState<AdminUser[]>([]);
@@ -246,12 +247,19 @@ function SystemSettings() {
                     disabled={loading}
                     className="flex-1"
                 />
-                <Button variant="outline" size="icon" onClick={handleCopyLink} disabled={loading}>
+                <Button variant="outline" size="icon" onClick={handleCopyLink} disabled={loading || !settings.report_issue_link}>
                     <Copy className="h-4 w-4" />
                 </Button>
+                {settings.report_issue_link && (
+                    <Button asChild variant="outline" size="icon" disabled={loading}>
+                        <Link href={settings.report_issue_link} target="_blank">
+                             <ExternalLink className="h-4 w-4" />
+                        </Link>
+                    </Button>
+                )}
             </div>
             <p className="text-xs text-muted-foreground">
-                Share this public link with residents so they can report issues. It will be automatically added to all communications.
+                This public link is for residents to report issues. It will be automatically added to all communications.
             </p>
         </div>
         <div className="space-y-2">
