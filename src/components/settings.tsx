@@ -259,7 +259,7 @@ function SystemSettings() {
                 )}
             </div>
             <p className="text-xs text-muted-foreground">
-                This public link is for residents to report issues. It will be automatically added to all communications.
+                This public link takes users to a form on this site, which then securely forwards the data to your backend. It is used in all communications.
             </p>
         </div>
         <div className="space-y-2">
