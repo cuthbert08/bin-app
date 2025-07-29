@@ -1,5 +1,5 @@
 import { Rota } from '@/components/rota';
 
-export default function RotaPage() {
+export default function RotationPage() {
   return <Rota />;
 }
