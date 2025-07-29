@@ -109,11 +109,15 @@ def generate_text_message(template, resident, settings, subject=None):
     personalized_body = template.replace("{first_name}", first_name).replace("{flat_number}", flat_number)
     
     # Add footer
-    footer = f"\n\nIf you have any issues, contact {owner_name} at {owner_number}.\nReport an issue: {report_link}"
+    footer = f"
+
+If you have any issues, contact {owner_name} at {owner_number}.
+Report an issue: {report_link}"
     
     # Prepend subject for announcements
     if subject:
-        return f"Announcement: {subject}\n{personalized_body}{footer}"
+        return f"Announcement: {subject}
+{personalized_body}{footer}"
     else:
         return f"{personalized_body}{footer}"
 
@@ -126,7 +130,8 @@ def generate_html_message(template, resident, settings, subject="Bin Duty Remind
     report_link = settings.get('report_issue_link', '#')
 
     # Personalize the main message, ensuring newlines are converted to <br> tags
-    personalized_body = template.replace("{first_name}", first_name).replace("{flat_number}", flat_number).replace('\n', '<br>')
+    personalized_body = template.replace("{first_name}", first_name).replace("{flat_number}", flat_number).replace('
+', '<br>')
     
     html = f"""
     <!DOCTYPE html>
@@ -232,6 +237,7 @@ def upload_document():
         blob = vercel_put(filename, file_body, {"access": "public"})
         return jsonify(blob), 200
     except Exception as e:
+        print(f"Error uploading file: {e}") # Added print statement
         return jsonify({"error": f"Could not upload file: {str(e)}"}), 500
 
 
@@ -258,9 +264,11 @@ def report_issue():
     owner_whatsapp = settings.get('owner_contact_whatsapp')
     owner_email = settings.get('owner_contact_email')
     
-    notification_message = f"New Issue Reported by {new_issue['reported_by']} ({new_issue['flat_number']}):\n{new_issue['description']}"
+    notification_message = f"New Issue Reported by {new_issue['reported_by']} ({new_issue['flat_number']}):
+{new_issue['description']}"
     if new_issue['image_url']:
-        notification_message += f"\nImage: {new_issue['image_url']}"
+        notification_message += f"
+Image: {new_issue['image_url']}"
         
     if owner_whatsapp: send_whatsapp_message(owner_whatsapp, notification_message)
     if owner_email: send_email_message(owner_email, "New Maintenance Issue Reported", notification_message)
