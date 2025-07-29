@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Resident, DashboardData, Issue, ReportIssueData, AdminUser, SystemSettings } from './types';
+import { Resident, DashboardData, Issue, ReportIssueData, AdminUser, SystemSettings, LogEntry } from './types';
 
 const apiClient = axios.create({
   baseURL: '/api',
@@ -61,7 +61,7 @@ export const skipTurn = async () => {
 };
 
 // Logs
-export const getLogs = async (): Promise<string[]> => {
+export const getLogs = async (): Promise<LogEntry[]> => {
   const response = await apiClient.get('/logs');
   return Array.isArray(response.data) ? response.data : [];
 };

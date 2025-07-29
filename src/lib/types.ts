@@ -55,3 +55,11 @@ export interface SystemSettings {
     reminder_template?: string;
     announcement_template?: string;
 }
+
+export interface LogEntry {
+    id: string;
+    timestamp: string;
+    user: string;
+    action: string;
+    details: Record<string, any>;
+}
