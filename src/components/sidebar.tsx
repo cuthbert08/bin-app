@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Users, Megaphone, Trash2, ScrollText, Wrench, Settings, LogOut } from 'lucide-react';
+import { Home, Users, Megaphone, Trash2, Wrench, Settings, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -11,13 +11,14 @@ const navItems = [
   { href: '/residents', label: 'Residents', icon: Users, roles: ['superuser', 'editor', 'viewer'] },
   { href: '/issues', label: 'Issue Tracker', icon: Wrench, roles: ['superuser', 'editor', 'viewer'] },
   { href: '/announcements', label: 'Announcements', icon: Megaphone, roles: ['superuser', 'editor'] },
-  { href: '/logs', label: 'Logs', icon: ScrollText, roles: ['superuser', 'editor'] },
   { href: '/settings', label: 'Settings', icon: Settings, roles: ['superuser'] },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
   const { user, logout, hasRole } = useAuth();
+
+  const filteredNavItems = navItems.filter(item => hasRole(item.roles));
 
   return (
     <aside className="w-64 flex-shrink-0 bg-card border-r">
@@ -29,8 +30,7 @@ export function Sidebar() {
           </Link>
         </div>
         <nav className="flex-1 px-4 py-6 space-y-2">
-          {navItems.map((item) => (
-            hasRole(item.roles) && (
+          {filteredNavItems.map((item) => (
               <Link
                 key={item.label}
                 href={item.href}
@@ -42,7 +42,6 @@ export function Sidebar() {
                 <item.icon className="h-4 w-4" />
                 {item.label}
               </Link>
-            )
           ))}
         </nav>
         <div className="mt-auto p-4 border-t">

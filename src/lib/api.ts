@@ -3,9 +3,6 @@ import { Resident, DashboardData, User, LoginResponse, Issue, ReportIssueData } 
 
 const apiClient = axios.create({
   baseURL: '/api',
-  headers: {
-    'Content-Type': 'application/json',
-  },
 });
 
 apiClient.interceptors.request.use((config) => {
