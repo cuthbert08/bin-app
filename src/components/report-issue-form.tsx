@@ -7,13 +7,14 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { reportIssue } from '@/lib/api';
+import { reportIssue, uploadDocument } from '@/lib/api';
 import Link from 'next/link';
 
 export function ReportIssueForm() {
     const [name, setName] = useState('');
     const [flatNumber, setFlatNumber] = useState('');
     const [description, setDescription] = useState('');
+    const [imageFile, setImageFile] = useState<File | null>(null);
     const [loading, setLoading] = useState(false);
     const [isSubmitted, setIsSubmitted] = useState(false);
     const { toast } = useToast();
@@ -23,8 +24,33 @@ export function ReportIssueForm() {
         setLoading(true);
 
         try {
-            await reportIssue({ name, flat_number: flatNumber, description });
+            let imageUrl = '';
+            // 1. Upload image if it exists
+            if (imageFile) {
+                try {
+                    const uploadResponse = await uploadDocument(imageFile);
+                    imageUrl = uploadResponse.url;
+                } catch (error) {
+                    toast({
+                        title: 'Image Upload Failed',
+                        description: 'Could not upload the image. Please try again.',
+                        variant: 'destructive',
+                    });
+                    setLoading(false);
+                    return;
+                }
+            }
+            
+            // 2. Submit the issue data
+            await reportIssue({ 
+                name, 
+                flat_number: flatNumber, 
+                description,
+                image_url: imageUrl,
+            });
+
             setIsSubmitted(true);
+
         } catch (error) {
             toast({
                 title: 'Submission Failed',
@@ -70,6 +96,7 @@ export function ReportIssueForm() {
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
                                 required
+                                disabled={loading}
                             />
                         </div>
                         <div className="space-y-2">
@@ -79,6 +106,7 @@ export function ReportIssueForm() {
                                 value={flatNumber}
                                 onChange={(e) => setFlatNumber(e.target.value)}
                                 required
+                                disabled={loading}
                             />
                         </div>
                     </div>
@@ -90,12 +118,18 @@ export function ReportIssueForm() {
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
                             required
+                            disabled={loading}
                         />
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="picture">Upload a Picture (Optional)</Label>
-                        <Input id="picture" type="file" disabled />
-                        <p className="text-xs text-muted-foreground">Image upload is not yet supported.</p>
+                        <Input 
+                            id="picture" 
+                            type="file" 
+                            onChange={(e) => setImageFile(e.target.files ? e.target.files[0] : null)}
+                            accept="image/*"
+                            disabled={loading}
+                         />
                     </div>
                     <Button type="submit" className="w-full" disabled={loading}>
                         {loading ? 'Submitting...' : 'Report Issue'}
