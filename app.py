@@ -10,6 +10,7 @@ from flask_cors import CORS
 from werkzeug.security import generate_password_hash, check_password_hash
 import jwt
 from functools import wraps
+from vercel_blob import put as vercel_put # For file uploads
 
 # --- INITIALIZATION ---
 
@@ -46,15 +47,13 @@ def token_required(f):
         token = None
         if 'x-access-token' in request.headers:
             token = request.headers['x-access-token']
-        if not token:
-            return jsonify({'message': 'Token is missing!'}), 401
+        if not token: return jsonify({'message': 'Token is missing!'}), 401
         try:
             data = jwt.decode(token, JWT_SECRET_KEY, algorithms=["HS256"])
             admins_json = redis.get('admins')
             admins = json.loads(admins_json) if admins_json else []
             current_user = next((admin for admin in admins if admin['id'] == data['id']), None)
-            if not current_user:
-                return jsonify({'message': 'User not found!'}), 401
+            if not current_user: return jsonify({'message': 'User not found!'}), 401
         except Exception as e:
             return jsonify({'message': 'Token is invalid!', 'error': str(e)}), 401
         return f(current_user, *args, **kwargs)
@@ -75,32 +74,24 @@ def login():
     auth = request.get_json()
     if not auth or not auth.get('email') or not auth.get('password'):
         return jsonify({'message': 'Could not verify'}), 401
-
     admins_json = redis.get('admins')
     admins = json.loads(admins_json) if admins_json else []
     user = next((admin for admin in admins if admin['email'] == auth['email']), None)
-
     if not user or not check_password_hash(user['password_hash'], auth['password']):
         return jsonify({'message': 'Invalid credentials'}), 401
-
-    token = jwt.encode({
-        'id': user['id'],
-        'exp': datetime.utcnow() + timedelta(hours=24)
-    }, JWT_SECRET_KEY, "HS256")
-
-    return jsonify({'token': token, 'user': {'email': user['email'], 'role': user['role']}})
+    token = jwt.encode({'id': user['id'], 'exp': datetime.utcnow() + timedelta(hours=24)}, JWT_SECRET_KEY, "HS256")
+    return jsonify({'token': token, 'user': {'id': user['id'], 'email': user['email'], 'role': user['role']}})
 
 
 # --- HELPER FUNCTIONS ---
 
-def add_log_entry(message):
+def add_log_entry(message, user_email="System"):
     logs_json = redis.get('logs')
     logs = json.loads(logs_json) if logs_json else []
     timestamp = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')
-    new_entry = f"[{timestamp}] {message}"
+    new_entry = f"[{timestamp}] ({user_email}) {message}"
     logs.insert(0, new_entry)
-    if len(logs) > 100:
-        logs = logs[:100]
+    if len(logs) > 100: logs = logs[:100]
     redis.set('logs', json.dumps(logs))
 
 # --- HTML EMAIL ---
@@ -190,7 +181,7 @@ def get_dashboard_info(current_user):
         }
         return jsonify(dashboard_data)
     except Exception as e:
-        add_log_entry(f"ERROR fetching dashboard: {str(e)}")
+        add_log_entry(f"ERROR fetching dashboard: {str(e)}", current_user['email'])
         return jsonify({"error": str(e)}), 500
 
 # RESIDENTS
@@ -217,7 +208,7 @@ def handle_residents(current_user):
             }
             flats.append(new_resident)
             redis.set('flats', json.dumps(flats))
-            add_log_entry(f"Admin '{current_user['email']}' added new resident: {new_resident['name']}")
+            add_log_entry(f"Admin '{current_user['email']}' added new resident: {new_resident['name']}", current_user['email'])
             return jsonify(new_resident), 201
         return add(current_user)
 
@@ -243,7 +234,7 @@ def handle_specific_resident(current_user, resident_id):
                 break
         if not resident_found: return jsonify({"error": "Resident not found"}), 404
         redis.set('flats', json.dumps(flats))
-        add_log_entry(f"Admin '{current_user['email']}' updated details for resident: {updated_name}")
+        add_log_entry(f"Admin '{current_user['email']}' updated details for resident: {updated_name}", current_user['email'])
         return jsonify({"message": "Resident updated successfully"})
 
     if request.method == 'DELETE':
@@ -252,7 +243,7 @@ def handle_specific_resident(current_user, resident_id):
         flats = [flat for flat in flats if flat.get("id") != resident_id]
         if len(flats) == original_len: return jsonify({"error": "Resident not found"}), 404
         redis.set('flats', json.dumps(flats))
-        add_log_entry(f"Admin '{current_user['email']}' deleted resident: {resident_name}")
+        add_log_entry(f"Admin '{current_user['email']}' deleted resident: {resident_name}", current_user['email'])
         return jsonify({"message": "Resident deleted successfully"})
 
 # ISSUES
@@ -286,7 +277,7 @@ def update_issue(current_user, issue_id):
         return jsonify({"error": "Issue not found"}), 404
         
     redis.set('issues', json.dumps(issues))
-    add_log_entry(f"Admin '{current_user['email']}' updated issue {issue_id} to '{new_status}'")
+    add_log_entry(f"Admin '{current_user['email']}' updated issue {issue_id} to '{new_status}'", current_user['email'])
     return jsonify({"message": "Issue status updated successfully"})
 
 # LOGS
@@ -306,7 +297,6 @@ def handle_admins(current_user):
     admins = json.loads(admins_json) if admins_json else []
 
     if request.method == 'GET':
-        # Don't send password hashes to the client
         safe_admins = [{k: v for k, v in admin.items() if k != 'password_hash'} for admin in admins]
         return jsonify(safe_admins)
     
@@ -326,7 +316,7 @@ def handle_admins(current_user):
         }
         admins.append(new_admin)
         redis.set('admins', json.dumps(admins))
-        add_log_entry(f"Superuser '{current_user['email']}' created new admin: {new_admin['email']}")
+        add_log_entry(f"Superuser '{current_user['email']}' created new admin: {new_admin['email']}", current_user['email'])
         
         safe_new_admin = {k: v for k, v in new_admin.items() if k != 'password_hash'}
         return jsonify(safe_new_admin), 201
@@ -345,17 +335,16 @@ def handle_specific_admin(current_user, admin_id):
             if admin.get("id") == admin_id:
                 if 'role' in data:
                     admins[i]['role'] = data['role']
-                if 'password' in data and data['password']: # If a new password is provided
+                if 'password' in data and data['password']:
                     admins[i]['password_hash'] = generate_password_hash(data['password'], method='pbkdf2:sha256')
                 admin_found = True
                 break
         if not admin_found: return jsonify({"error": "Admin not found"}), 404
         redis.set('admins', json.dumps(admins))
-        add_log_entry(f"Superuser '{current_user['email']}' updated details for admin ID: {admin_id}")
+        add_log_entry(f"Superuser '{current_user['email']}' updated details for admin ID: {admin_id}", current_user['email'])
         return jsonify({"message": "Admin updated successfully"})
 
     if request.method == 'DELETE':
-        # Prevent a user from deleting themselves
         if current_user['id'] == admin_id:
             return jsonify({'message': 'Cannot delete yourself'}), 403
             
@@ -364,7 +353,7 @@ def handle_specific_admin(current_user, admin_id):
         admins = [admin for admin in admins if admin.get("id") != admin_id]
         if len(admins) == original_len: return jsonify({"error": "Admin not found"}), 404
         redis.set('admins', json.dumps(admins))
-        add_log_entry(f"Superuser '{current_user['email']}' deleted admin: {admin_email}")
+        add_log_entry(f"Superuser '{current_user['email']}' deleted admin: {admin_email}", current_user['email'])
         return jsonify({"message": "Admin deleted successfully"})
 
 # SETTINGS
@@ -380,7 +369,7 @@ def handle_settings(current_user):
     if request.method == 'PUT':
         new_settings = request.get_json()
         redis.set('settings', json.dumps(new_settings))
-        add_log_entry(f"Superuser '{current_user['email']}' updated system settings.")
+        add_log_entry(f"Superuser '{current_user['email']}' updated system settings.", current_user['email'])
         return jsonify(new_settings)
 
 # CORE ACTIONS
@@ -401,7 +390,6 @@ def trigger_reminder(current_user):
     settings_json = redis.get('settings')
     settings = json.loads(settings_json) if settings_json else {}
 
-    # Send notifications
     contact_info = person_on_duty.get('contact', {})
     if custom_message:
         message_to_send = custom_message
@@ -418,7 +406,7 @@ def trigger_reminder(current_user):
     if contact_info.get('email'): send_email_message(contact_info['email'], "Bin Duty Reminder", html_body)
     
     redis.set('last_reminder_date', date.today().isoformat())
-    add_log_entry(f"Admin '{current_user['email']}' manually triggered reminder for {person_on_duty['name']}.")
+    add_log_entry(f"Admin '{current_user['email']}' manually triggered reminder for {person_on_duty['name']}.", current_user['email'])
     return jsonify({"message": f"Reminder sent to {person_on_duty['name']}."})
 
 @app.route('/api/announcements', methods=['POST'])
@@ -439,7 +427,7 @@ def send_announcement(current_user):
         if contact_info.get('sms'): send_sms_message(contact_info['sms'], f"Announcement: {subject}\n{message}")
         if contact_info.get('email'): send_email_message(contact_info['email'], subject, message)
         
-    add_log_entry(f"Admin '{current_user['email']}' sent an announcement with subject: {subject}")
+    add_log_entry(f"Admin '{current_user['email']}' sent an announcement with subject: {subject}", current_user['email'])
     return jsonify({"message": "Announcement sent to all residents."})
 
 @app.route('/api/set-current-turn/<resident_id>', methods=['POST'])
@@ -452,7 +440,7 @@ def set_current_turn(current_user, resident_id):
     try:
         new_index = next(i for i, flat in enumerate(flats) if flat.get("id") == resident_id)
         redis.set('current_turn_index', new_index)
-        add_log_entry(f"Admin '{current_user['email']}' set current turn to {flats[new_index]['name']}.")
+        add_log_entry(f"Admin '{current_user['email']}' set current turn to {flats[new_index]['name']}.", current_user['email'])
         return jsonify({"message": f"Current turn set to {flats[new_index]['name']}."})
     except StopIteration:
         return jsonify({"error": "Resident not found"}), 404
@@ -471,7 +459,7 @@ def skip_turn(current_user):
     new_index = (current_index + 1) % len(flats)
     redis.set('current_turn_index', new_index)
     
-    add_log_entry(f"Admin '{current_user['email']}' skipped {skipped_person_name}'s turn.")
+    add_log_entry(f"Admin '{current_user['email']}' skipped {skipped_person_name}'s turn.", current_user['email'])
     return jsonify({"message": "Turn skipped successfully."})
 
 @app.route('/api/toggle-pause', methods=['POST'])
@@ -482,10 +470,10 @@ def toggle_pause(current_user):
     new_status = not is_paused
     redis.set('reminders_paused', json.dumps(new_status))
     status_text = "paused" if new_status else "resumed"
-    add_log_entry(f"Admin '{current_user['email']}' {status_text} reminders.")
+    add_log_entry(f"Admin '{current_user['email']}' {status_text} reminders.", current_user['email'])
     return jsonify({"message": f"Reminders are now {status_text}.", "reminders_paused": new_status})
 
 if __name__ == '__main__':
+    # You might want to remove the initialization routes or protect them
+    # before deploying to a production environment.
     app.run(debug=True)
-
-    
