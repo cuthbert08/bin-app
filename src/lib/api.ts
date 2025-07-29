@@ -81,20 +81,6 @@ export const updateIssueStatus = async (id: string, status: string) => {
     await apiClient.put(`/issues/${id}`, { status });
 }
 
-// File Upload
-export const uploadDocument = async (file: File): Promise<{ url: string }> => {
-    const formData = new FormData();
-    formData.append('file', file);
-
-    const response = await apiClient.post('/documents/upload', formData, {
-        headers: {
-            'Content-Type': 'multipart/form-data',
-        },
-    });
-    return response.data;
-};
-
-
 // Settings
 export const getSettings = async (): Promise<SystemSettings> => {
     const response = await apiClient.get('/settings');
@@ -122,5 +108,3 @@ export const updateAdmin = async (id: string, adminData: Partial<AdminUser>) => 
 export const deleteAdmin = async (id: string) => {
     await apiClient.delete(`/admins/${id}`);
 };
-
-    

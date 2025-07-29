@@ -32,7 +32,6 @@ export interface Issue {
     reported_by: string;
     flat_number: string;
     description: string;
-    image_url?: string;
     status: 'Reported' | 'In Progress' | 'Resolved';
     timestamp: string;
 }
@@ -41,7 +40,6 @@ export interface ReportIssueData {
     name: string;
     flat_number: string;
     description: string;
-    image_url?: string;
 }
 
 export type AdminUser = Omit<User, 'id'> & { id: string };
@@ -55,5 +53,3 @@ export interface SystemSettings {
     reminder_template?: string;
     announcement_template?: string;
 }
-
-    

@@ -7,14 +7,12 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { reportIssue, uploadDocument } from '@/lib/api';
-import Link from 'next/link';
+import { reportIssue } from '@/lib/api';
 
 export function ReportIssueForm() {
     const [name, setName] = useState('');
     const [flatNumber, setFlatNumber] = useState('');
     const [description, setDescription] = useState('');
-    const [imageFile, setImageFile] = useState<File | null>(null);
     const [loading, setLoading] = useState(false);
     const [isSubmitted, setIsSubmitted] = useState(false);
     const { toast } = useToast();
@@ -24,29 +22,10 @@ export function ReportIssueForm() {
         setLoading(true);
 
         try {
-            let imageUrl = '';
-            // 1. Upload image if it exists
-            if (imageFile) {
-                try {
-                    const uploadResponse = await uploadDocument(imageFile);
-                    imageUrl = uploadResponse.url;
-                } catch (error) {
-                    toast({
-                        title: 'Image Upload Failed',
-                        description: 'Could not upload the image. Please try again.',
-                        variant: 'destructive',
-                    });
-                    setLoading(false);
-                    return;
-                }
-            }
-            
-            // 2. Submit the issue data
             await reportIssue({ 
                 name, 
                 flat_number: flatNumber, 
                 description,
-                image_url: imageUrl,
             });
 
             setIsSubmitted(true);
@@ -70,9 +49,6 @@ export function ReportIssueForm() {
                 </CardHeader>
                 <CardContent>
                     <p className='text-muted-foreground'>Your maintenance issue has been reported successfully. The property owner has been notified.</p>
-                     <Link href="/login" passHref>
-                        <Button variant="link" className="mt-4 px-0">Go back to login</Button>
-                    </Link>
                 </CardContent>
             </Card>
         )
@@ -120,16 +96,6 @@ export function ReportIssueForm() {
                             required
                             disabled={loading}
                         />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="picture">Upload a Picture (Optional)</Label>
-                        <Input 
-                            id="picture" 
-                            type="file" 
-                            onChange={(e) => setImageFile(e.target.files ? e.target.files[0] : null)}
-                            accept="image/*"
-                            disabled={loading}
-                         />
                     </div>
                     <Button type="submit" className="w-full" disabled={loading}>
                         {loading ? 'Submitting...' : 'Report Issue'}
