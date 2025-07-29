@@ -212,9 +212,17 @@ function SystemSettings() {
             <Label htmlFor="ownerName">Owner Name</Label>
             <Input id="ownerName" value={settings.owner_name || ''} onChange={e => handleChange('owner_name', e.target.value)} disabled={loading} />
         </div>
-         <div className="space-y-2">
-            <Label htmlFor="ownerContact">Owner Contact (WhatsApp)</Label>
-            <Input id="ownerContact" value={settings.owner_contact_whatsapp || ''} onChange={e => handleChange('owner_contact_whatsapp', e.target.value)} disabled={loading} />
+        <div className="space-y-2">
+            <Label htmlFor="ownerContactWhatsApp">Owner Contact (WhatsApp)</Label>
+            <Input id="ownerContactWhatsApp" value={settings.owner_contact_whatsapp || ''} onChange={e => handleChange('owner_contact_whatsapp', e.target.value)} disabled={loading} />
+        </div>
+        <div className="space-y-2">
+            <Label htmlFor="ownerContactSms">Owner Contact (SMS)</Label>
+            <Input id="ownerContactSms" value={settings.owner_contact_number || ''} onChange={e => handleChange('owner_contact_number', e.target.value)} disabled={loading} />
+        </div>
+        <div className="space-y-2">
+            <Label htmlFor="ownerContactEmail">Owner Contact (Email)</Label>
+            <Input id="ownerContactEmail" type="email" value={settings.owner_contact_email || ''} onChange={e => handleChange('owner_contact_email', e.target.value)} disabled={loading} />
         </div>
         <div className="space-y-2">
             <Label htmlFor="reportLink">Report Issue Link</Label>
