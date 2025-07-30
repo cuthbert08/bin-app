@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Resident, DashboardData, Issue, ReportIssueData, AdminUser, SystemSettings } from './types';
+import { Resident, DashboardData, Issue, ReportIssueData, AdminUser, SystemSettings, CommunicationHistory } from './types';
 
 const apiClient = axios.create({
   baseURL: '/api',
@@ -124,4 +124,14 @@ export const updateAdmin = async (id: string, adminData: Partial<AdminUser>) => 
 
 export const deleteAdmin = async (id: string) => {
     await apiClient.delete(`/admins/${id}`);
+};
+
+// History
+export const getHistory = async (): Promise<CommunicationHistory[]> => {
+    const response = await apiClient.get('/history');
+    return response.data;
+};
+
+export const deleteHistory = async (ids: string[]): Promise<void> => {
+    await apiClient.delete('/history', { data: { ids } });
 };

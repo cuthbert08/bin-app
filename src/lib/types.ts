@@ -52,4 +52,13 @@ export interface SystemSettings {
     report_issue_link?: string;
     reminder_template?: string;
     announcement_template?: string;
+    reminders_paused?: boolean;
+}
+
+export interface CommunicationHistory {
+    id: string;
+    type: string;
+    recipient: string;
+    content: string;
+    timestamp: string;
 }

@@ -12,12 +12,14 @@ import { getSettings, updateSettings, getAdmins, addAdmin, updateAdmin, deleteAd
 import { type SystemSettings, type AdminUser } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
-import { Pencil, Trash2, PlusCircle, Copy, ExternalLink } from 'lucide-react';
+import { Pencil, Trash2, PlusCircle, Copy, ExternalLink, AlertTriangle } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from './ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
+import { Switch } from './ui/switch';
+import { Alert, AlertDescription } from './ui/alert';
 
 function AdminManagement() {
   const [admins, setAdmins] = useState<AdminUser[]>([]);
@@ -204,7 +206,7 @@ function SystemSettings() {
     }
   };
 
-  const handleChange = (key: keyof SystemSettings, value: string) => {
+  const handleChange = (key: keyof SystemSettings, value: string | boolean) => {
     setSettings(prev => ({ ...prev, [key]: value }));
   };
   
@@ -223,6 +225,27 @@ function SystemSettings() {
         <CardDescription>Configure system-wide settings.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
+        <div className="space-y-4">
+            <Label>Automatic Reminders</Label>
+             <Alert>
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription>
+                    Reminders are scheduled to run automatically every Wednesday at 07:20 AM (SAST). You can pause them below.
+                </AlertDescription>
+            </Alert>
+            <div className='flex items-center space-x-2'>
+                 <Switch
+                    id="reminders-paused"
+                    checked={!(settings.reminders_paused ?? false)}
+                    onCheckedChange={(checked) => handleChange('reminders_paused', !checked)}
+                    disabled={loading}
+                />
+                <Label htmlFor="reminders-paused">
+                    {settings.reminders_paused ? 'Automatic reminders are PAUSED' : 'Automatic reminders are ACTIVE'}
+                </Label>
+            </div>
+        </div>
+
         <div className="space-y-2">
             <Label htmlFor="ownerName">Owner Name</Label>
             <Input id="ownerName" value={settings.owner_name || ''} onChange={e => handleChange('owner_name', e.target.value)} disabled={loading} />
@@ -299,8 +322,8 @@ export function Settings() {
         <div className="space-y-8">
             <h1 className="text-3xl font-bold">Settings</h1>
             <div className="grid gap-8 md:grid-cols-1 lg:grid-cols-2">
-                <AdminManagement />
                 <SystemSettings />
+                <AdminManagement />
             </div>
         </div>
     </ProtectedLayout>

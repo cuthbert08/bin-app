@@ -7,7 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { getResidents, updateResidentsOrder } from '@/lib/api';
 import { type Resident } from '@/lib/types';
-import { GripVertical, Save } from 'lucide-react';
+import { GripVertical, Save, Clock } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { addDays, nextWednesday, format } from 'date-fns';
 
@@ -66,13 +66,13 @@ export function Rota() {
     try {
       await updateResidentsOrder(residents);
       toast({
-        title: 'Rota Updated!',
-        description: 'The new duty rota has been saved successfully.',
+        title: 'Rotation Updated!',
+        description: 'The new duty rotation has been saved successfully.',
       });
       fetchResidents();
     } catch (error) {
       toast({
-        title: 'Error Saving Rota',
+        title: 'Error Saving Rotation',
         description: 'Could not save the new resident order.',
         variant: 'destructive',
       });
@@ -92,7 +92,7 @@ export function Rota() {
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Duty Rota</h1>
+        <h1 className="text-3xl font-bold">Duty Rotation</h1>
         {canPerformAction && (
           <Button onClick={handleSaveChanges}>
             <Save className="mr-2" />
@@ -134,9 +134,12 @@ export function Rota() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="font-semibold">Next Duty</p>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="font-semibold">
                       {format(getDutyDate(index), 'EEE, dd MMM yyyy')}
+                    </p>
+                    <p className="text-sm text-muted-foreground flex items-center justify-end gap-1">
+                      <Clock className='size-3' />
+                      07:20 AM SAST
                     </p>
                   </div>
                 </li>
