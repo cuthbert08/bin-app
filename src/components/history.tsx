@@ -12,7 +12,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { getHistory, deleteHistory } from '@/lib/api';
-import { type CommunicationEvent, CommunicationDetail } from '@/lib/types';
+import { type CommunicationEvent } from '@/lib/types';
 import { format } from 'date-fns';
 import { Button } from './ui/button';
 import { Checkbox } from './ui/checkbox';
@@ -28,9 +28,10 @@ import {
   AlertDialogTrigger,
 } from './ui/alert-dialog';
 import { Trash2, CheckCircle, XCircle, ChevronDown, ChevronUp, Send, Mail, MessageSquare } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/card';
+import { Card, CardContent, CardHeader } from './ui/card';
 import { Badge } from './ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
+import { useAuth } from '@/contexts/AuthContext';
 
 const getStatusVariant = (status: string) => {
   switch (status.toLowerCase()) {
@@ -56,6 +57,9 @@ export function History() {
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const [openItems, setOpenItems] = useState<Set<string>>(new Set());
   const { toast } = useToast();
+  const { hasRole } = useAuth();
+
+  const canPerformAction = hasRole(['superuser', 'editor']);
 
   const fetchHistory = useCallback(async () => {
     try {
@@ -108,6 +112,7 @@ export function History() {
   };
 
   const handleDeleteSelected = async () => {
+    if (!canPerformAction) return;
     try {
       await deleteHistory(Array.from(selectedItems));
       toast({
@@ -131,7 +136,7 @@ export function History() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Communication History</h1>
-        {selectedItems.size > 0 && (
+        {canPerformAction && selectedItems.size > 0 && (
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button variant="destructive">
@@ -161,11 +166,14 @@ export function History() {
                     <TableHeader>
                         <TableRow>
                         <TableHead className="w-[50px]">
-                            <Checkbox
-                                checked={isAllSelected}
-                                onCheckedChange={(checked) => handleSelectAll(!!checked)}
-                                aria-label="Select all history items"
-                            />
+                             {canPerformAction && (
+                                <Checkbox
+                                    checked={isAllSelected}
+                                    onCheckedChange={(checked) => handleSelectAll(!!checked)}
+                                    aria-label="Select all history items"
+                                    disabled={!canPerformAction || history.length === 0}
+                                />
+                            )}
                         </TableHead>
                         <TableHead>Date</TableHead>
                         <TableHead>Type</TableHead>
@@ -187,13 +195,16 @@ export function History() {
                             <div className="border rounded-md">
                                 <TableRow className="flex w-full items-center">
                                     <TableCell className="w-[50px] pl-3">
-                                        <Checkbox
-                                        checked={selectedItems.has(item.id)}
-                                        onCheckedChange={(e) => {
-                                            e.stopPropagation();
-                                            handleSelectItem(item.id)
-                                        }}
-                                        />
+                                        {canPerformAction && (
+                                            <Checkbox
+                                                checked={selectedItems.has(item.id)}
+                                                onCheckedChange={(e) => {
+                                                    e.stopPropagation();
+                                                    handleSelectItem(item.id)
+                                                }}
+                                                aria-label={`Select event ${item.id}`}
+                                            />
+                                        )}
                                     </TableCell>
                                     <TableCell className="flex-1 font-medium">{format(new Date(item.timestamp), 'dd MMM yyyy, HH:mm')}</TableCell>
                                     <TableCell className="flex-1">{item.type}</TableCell>
@@ -254,5 +265,3 @@ export function History() {
     </div>
   );
 }
-
-    
