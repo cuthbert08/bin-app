@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Resident, DashboardData, Issue, ReportIssueData, AdminUser, SystemSettings, CommunicationHistory } from './types';
+import { Resident, DashboardData, Issue, ReportIssueData, AdminUser, SystemSettings, CommunicationEvent } from './types';
 
 const apiClient = axios.create({
   baseURL: '/api',
@@ -64,6 +64,11 @@ export const skipTurn = async () => {
     await apiClient.post('/skip-turn');
 };
 
+export const advanceTurn = async () => {
+    await apiClient.post('/advance-turn');
+};
+
+
 // Logs
 export const getLogs = async (): Promise<string[]> => {
   const response = await apiClient.get('/logs');
@@ -118,7 +123,7 @@ export const addAdmin = async (adminData: Partial<AdminUser> & { password?: stri
     await apiClient.post('/admins', adminData);
 };
 
-export const updateAdmin = async (id: string, adminData: Partial<AdminUser>) => {
+export const updateAdmin = async (id: string, adminData: Partial<AdminUser> & { password?: string }) => {
     await apiClient.put(`/admins/${id}`, adminData);
 };
 
@@ -127,7 +132,7 @@ export const deleteAdmin = async (id: string) => {
 };
 
 // History
-export const getHistory = async (): Promise<CommunicationHistory[]> => {
+export const getHistory = async (): Promise<CommunicationEvent[]> => {
     const response = await apiClient.get('/history');
     return response.data;
 };

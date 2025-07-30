@@ -55,10 +55,18 @@ export interface SystemSettings {
     reminders_paused?: boolean;
 }
 
-export interface CommunicationHistory {
+export interface CommunicationDetail {
+    recipient: string;
+    method: 'WhatsApp' | 'SMS' | 'Email';
+    status: 'Sent' | 'Failed';
+    content?: string;
+}
+
+export interface CommunicationEvent {
     id: string;
     type: string;
-    recipient: string;
-    content: string;
+    subject: string;
     timestamp: string;
+    status: 'Completed' | 'Partial' | 'Failed';
+    details: CommunicationDetail[];
 }

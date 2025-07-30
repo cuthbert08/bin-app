@@ -4,12 +4,12 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { getDashboardInfo, triggerReminder, skipTurn } from '@/lib/api';
+import { getDashboardInfo, triggerReminder, skipTurn, advanceTurn } from '@/lib/api';
 import { type DashboardData } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format, nextWednesday, addDays } from 'date-fns';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, ChevronsRight, SkipForward } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
 export function Dashboard() {
@@ -83,6 +83,24 @@ export function Dashboard() {
         console.error('Failed to skip turn:', error);
     }
   };
+  
+  const handleAdvanceTurn = async () => {
+    try {
+        await advanceTurn();
+        toast({
+            title: 'Turn Advanced',
+            description: 'The duty has been manually advanced to the next person.',
+        });
+        await loadDashboardData();
+    } catch (error) {
+        toast({
+            title: 'Error Advancing Turn',
+            description: 'Could not advance the current turn.',
+            variant: 'destructive',
+        });
+        console.error('Failed to advance turn:', error);
+    }
+  };
 
   const currentDutyDate = nextWednesday(new Date());
   const nextDutyDate = addDays(currentDutyDate, 7);
@@ -154,9 +172,12 @@ export function Dashboard() {
             )}
           </CardContent>
            {canPerformAction && (
-             <CardFooter>
+             <CardFooter className='space-x-2'>
+                  <Button variant="outline" onClick={handleAdvanceTurn} disabled={loading || !!error}>
+                      <ChevronsRight /> Advance Turn
+                  </Button>
                   <Button variant="outline" onClick={handleSkipTurn} disabled={loading || !!error}>
-                      Skip Current Turn
+                      <SkipForward /> Skip Turn
                   </Button>
               </CardFooter>
             )}
@@ -170,7 +191,7 @@ export function Dashboard() {
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-muted-foreground">
-              Send the standard weekly reminder to the person currently on duty.
+              Send the standard weekly reminder to the person currently on duty. This will not advance the turn.
             </p>
             {canPerformAction && (
               <Button onClick={() => handleSendReminder()} disabled={loading || !!error}>Send Reminder</Button>
