@@ -26,9 +26,9 @@ JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY', 'default-super-secret-key-for-
 
 # --- IMPORT SENDING FUNCTIONS ---
 # These should be your actual implementations that use services like Twilio/SendGrid
-from send_whatsapp import send_whatsapp_message
-from send_sms import send_sms_message
-from send_email import send_email_message
+from src.send_whatsapp import send_whatsapp_message
+from src.send_sms import send_sms_message
+from src.send_email import send_email_message
 
 
 # --- SECURITY & AUTHENTICATION ---
@@ -925,5 +925,3 @@ def initialize_data():
 
 if __name__ == '__main__':
     app.run(debug=True)
-
-    
