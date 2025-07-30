@@ -3,7 +3,7 @@
 import os
 import json
 from flask import Flask, jsonify, request
-from upstash_redis import Redis
+from redis import Redis
 from datetime import datetime, date, timedelta
 import uuid
 from flask_cors import CORS
@@ -17,10 +17,8 @@ app = Flask(__name__)
 CORS(app)
 
 # Initialize Redis Client
-redis = Redis(
-    url=os.environ.get('KV_REST_API_URL'),
-    token=os.environ.get('KV_REST_API_TOKEN')
-)
+redis = Redis.from_url(os.environ.get('KV_REST_API_URL'))
+
 
 JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY', 'default-super-secret-key-for-testing')
 
@@ -795,7 +793,7 @@ def trigger_reminder():
         add_log_entry(user_email, f"Reminder Sent to {person_on_duty['name']}")
         redis.set('last_reminder_date', date.today().isoformat())
     else:
-        add_log_entry(user_email, f"Reminder FAILED for {person_on_duty['name']}. Check credentials.")
+        add_log_entry(user_email, f"Reminder FAILED for {person_on_duty['name']}. Check logs and credentials.")
 
     if user_email == "System (Cron)" and sent_any:
         new_index = (current_index + 1) % len(flats)
@@ -1001,3 +999,4 @@ if __name__ == '__main__':
     
 
     
+

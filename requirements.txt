@@ -4,6 +4,8 @@ PyJWT
 Werkzeug
 gunicorn
 python-dotenv
-upstash-redis
-vercel-blob
+redis
+requests
+twilio
 sendgrid
+vercel-blob
