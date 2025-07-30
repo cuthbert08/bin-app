@@ -10,12 +10,16 @@ import { Checkbox } from './ui/checkbox';
 import { Button } from './ui/button';
 import { Trash2 } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
+import { useAuth } from '@/contexts/AuthContext';
 
 export function Logs() {
   const [logs, setLogs] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedLogs, setSelectedLogs] = useState<Set<string>>(new Set());
   const { toast } = useToast();
+  const { hasRole } = useAuth();
+
+  const canDelete = hasRole(['superuser']);
 
   const fetchLogs = useCallback(async () => {
     try {
@@ -57,6 +61,7 @@ export function Logs() {
   };
 
   const handleDeleteSelected = async () => {
+    if (!canDelete) return;
     try {
       await deleteLogs(Array.from(selectedLogs));
       toast({
@@ -79,7 +84,7 @@ export function Logs() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">System Logs</h1>
-        {selectedLogs.size > 0 && (
+        {canDelete && selectedLogs.size > 0 && (
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button variant="destructive">
@@ -117,25 +122,29 @@ export function Logs() {
                 </div>
               ) : logs.length > 0 ? (
                 <div>
-                  <div className="flex items-center p-2 border-b">
-                    <Checkbox
-                      id="select-all-logs"
-                      checked={selectedLogs.size > 0 && selectedLogs.size === logs.length}
-                      onCheckedChange={(checked) => handleSelectAll(!!checked)}
-                      className="mr-4"
-                    />
-                    <label htmlFor="select-all-logs" className="cursor-pointer flex-1">
-                      Select All
-                    </label>
-                  </div>
+                  {canDelete && (
+                    <div className="flex items-center p-2 border-b">
+                        <Checkbox
+                        id="select-all-logs"
+                        checked={selectedLogs.size > 0 && selectedLogs.size === logs.length}
+                        onCheckedChange={(checked) => handleSelectAll(!!checked)}
+                        className="mr-4"
+                        />
+                        <label htmlFor="select-all-logs" className="cursor-pointer flex-1">
+                        Select All
+                        </label>
+                    </div>
+                  )}
                   {logs.map((log, index) => (
                     <div key={index} className="flex items-center p-2 border-b last:border-b-0">
-                      <Checkbox
-                        id={`log-${index}`}
-                        checked={selectedLogs.has(log)}
-                        onCheckedChange={() => handleSelectLog(log)}
-                        className="mr-4"
-                      />
+                      {canDelete && (
+                        <Checkbox
+                            id={`log-${index}`}
+                            checked={selectedLogs.has(log)}
+                            onCheckedChange={() => handleSelectLog(log)}
+                            className="mr-4"
+                        />
+                      )}
                       <label htmlFor={`log-${index}`} className="cursor-pointer flex-1">
                         {log}
                       </label>

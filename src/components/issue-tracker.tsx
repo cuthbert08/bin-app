@@ -57,6 +57,7 @@ export function IssueTracker() {
   const { isAuthenticated, hasRole } = useAuth();
   
   const canPerformAction = hasRole(['superuser', 'editor']);
+  const canDelete = hasRole(['superuser']);
 
   const fetchIssues = useCallback(async () => {
     try {
@@ -130,6 +131,7 @@ export function IssueTracker() {
   }
 
   const handleDeleteSelected = async () => {
+    if (!canDelete) return;
     try {
         await deleteIssues(Array.from(selectedIssues));
         toast({
@@ -152,7 +154,7 @@ export function IssueTracker() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Issue Tracker</h1>
-        {canPerformAction && selectedIssues.size > 0 && (
+        {canDelete && selectedIssues.size > 0 && (
           <AlertDialog>
               <AlertDialogTrigger asChild>
                   <Button variant="destructive">
@@ -181,7 +183,7 @@ export function IssueTracker() {
         <Table>
           <TableHeader>
             <TableRow>
-              {canPerformAction && (
+              {canDelete && (
                   <TableHead className="w-[50px]">
                       <Checkbox
                           checked={selectedIssues.size > 0 && selectedIssues.size === issues.length}
@@ -279,15 +281,15 @@ export function IssueTracker() {
     if (loading) {
       return Array.from({ length: 5 }).map((_, i) => (
           <TableRow key={i}>
-            {canPerformAction && <TableCell><Skeleton className="h-5 w-5" /></TableCell>}
-            <TableCell colSpan={canPerformAction ? 5 : 6}><Skeleton className="h-8 w-full" /></TableCell>
+            {canDelete && <TableCell><Skeleton className="h-5 w-5" /></TableCell>}
+            <TableCell colSpan={canDelete ? 5 : 6}><Skeleton className="h-8 w-full" /></TableCell>
           </TableRow>
       ));
     }
     if (issues.length === 0) {
       return (
           <TableRow>
-            <TableCell colSpan={6} className="text-center">
+            <TableCell colSpan={canPerformAction ? 6 : 5} className="text-center">
               No issues reported yet.
             </TableCell>
           </TableRow>
@@ -295,7 +297,7 @@ export function IssueTracker() {
     }
     return issues.map((issue) => (
       <TableRow key={issue.id}>
-        {canPerformAction && (
+        {canDelete && (
             <TableCell>
                 <Checkbox
                     checked={selectedIssues.has(issue.id)}

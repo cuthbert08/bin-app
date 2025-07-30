@@ -62,6 +62,7 @@ export function Residents() {
   const { hasRole } = useAuth();
   
   const canPerformAction = hasRole(['superuser', 'editor']);
+  const canDelete = hasRole(['superuser']);
 
   const fetchResidents = useCallback(async () => {
     try {
@@ -131,6 +132,7 @@ export function Residents() {
   };
 
   const handleDeleteResident = async (id: string) => {
+    if (!canDelete) return;
     try {
         await deleteResident(id);
         toast({
@@ -155,6 +157,7 @@ export function Residents() {
               title: 'Current Turn Updated',
               description: `${resident.name} is now set as the current person on duty.`
           });
+          fetchResidents();
       } catch (error) {
           toast({
               title: 'Error Setting Current Turn',
@@ -222,15 +225,18 @@ export function Residents() {
                   <TableCell>{resident.contact.email || 'N/A'}</TableCell>
                   <TableCell className="text-right space-x-1">
                       {canPerformAction && (
-                        <>
-                          <Button variant="outline" size="sm" onClick={() => handleSetCurrent(resident)}>
-                              <CheckCircle className="mr-2 h-4 w-4"/>
-                              Set as Current
-                          </Button>
+                        <Button variant="outline" size="sm" onClick={() => handleSetCurrent(resident)}>
+                            <CheckCircle className="mr-2 h-4 w-4"/>
+                            Set as Current
+                        </Button>
+                      )}
+                      {canPerformAction && (
                           <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(resident)}>
                               <Pencil />
                               <span className="sr-only">Edit</span>
                           </Button>
+                      )}
+                      {canDelete && (
                           <AlertDialog>
                               <AlertDialogTrigger asChild>
                                   <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
@@ -253,7 +259,6 @@ export function Residents() {
                                   </AlertDialogFooter>
                               </AlertDialogContent>
                           </AlertDialog>
-                        </>
                       )}
                   </TableCell>
                 </TableRow>
@@ -301,27 +306,29 @@ export function Residents() {
                        <DropdownMenuItem onClick={() => handleOpenDialog(resident)}>
                           <Pencil className="mr-2"/> Edit
                        </DropdownMenuItem>
-                        <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                  <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive">
-                                      <Trash2 className="mr-2"/> Delete
-                                  </DropdownMenuItem>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                  <AlertDialogHeader>
-                                  <AlertDialogTitle>Are you sure you want to delete this resident?</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                      This action cannot be undone.
-                                  </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction onClick={() => handleDeleteResident(resident.id)}>
-                                      Delete
-                                  </AlertDialogAction>
-                                  </AlertDialogFooter>
-                              </AlertDialogContent>
-                          </AlertDialog>
+                       {canDelete && (
+                            <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                    <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive">
+                                        <Trash2 className="mr-2"/> Delete
+                                    </DropdownMenuItem>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                    <AlertDialogTitle>Are you sure you want to delete this resident?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        This action cannot be undone.
+                                    </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={() => handleDeleteResident(resident.id)}>
+                                        Delete
+                                    </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
+                       )}
                     </DropdownMenuContent>
                   </DropdownMenu>
                 )}
