@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Users, Megaphone, Trash2, Wrench, Settings, LogOut, FileText, ListOrdered, History as HistoryIcon } from 'lucide-react';
+import { Home, Users, Megaphone, Shield, Wrench, Settings, LogOut, FileText, ListOrdered, History as HistoryIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -28,8 +28,8 @@ export function Sidebar() {
       <div className="flex flex-col h-full">
         <div className="h-16 flex items-center px-6 border-b">
           <Link href="/" className="flex items-center gap-2 font-semibold text-lg">
-            <Trash2 className="w-6 h-6 text-primary" />
-            <span>Bin Reminder</span>
+            <Shield className="w-6 h-6 text-primary" />
+            <span>Admin Dashboard</span>
           </Link>
         </div>
         <nav className="flex-1 px-4 py-6 space-y-2">

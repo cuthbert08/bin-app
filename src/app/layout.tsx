@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 import { AuthProvider } from '@/contexts/AuthContext';
 
 export const metadata: Metadata = {
-  title: 'Bin Reminder',
+  title: 'Admin Dashboard',
   description: 'Dashboard for the Bin Reminder service.',
 };
 

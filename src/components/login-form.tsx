@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { Trash2, Eye, EyeOff } from 'lucide-react';
+import { Shield, Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
 import { Separator } from './ui/separator';
 
@@ -44,8 +44,8 @@ export function LoginForm() {
     <Card className="w-full max-w-sm">
       <CardHeader className="text-center">
         <div className="flex justify-center items-center gap-2 mb-4">
-            <Trash2 className="w-8 h-8 text-primary" />
-            <h1 className="text-2xl font-bold">Bin Reminder</h1>
+            <Shield className="w-8 h-8 text-primary" />
+            <h1 className="text-2xl font-bold">Admin Dashboard</h1>
         </div>
         <CardTitle>Admin Login</CardTitle>
         <CardDescription>Enter your credentials to access the dashboard.</CardDescription>
