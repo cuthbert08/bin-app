@@ -139,7 +139,7 @@ export function Rota() {
                     </p>
                     <p className="text-sm text-muted-foreground flex items-center justify-end gap-1">
                       <Clock className='size-3' />
-                      07:20 AM SAST
+                      07:35 AM SAST
                     </p>
                   </div>
                 </li>

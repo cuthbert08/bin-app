@@ -230,7 +230,7 @@ function SystemSettings() {
              <Alert>
                 <AlertTriangle className="h-4 w-4" />
                 <AlertDescription>
-                    Reminders are scheduled to run automatically every Wednesday at 07:20 AM (SAST). You can pause them below.
+                    Reminders are scheduled to run automatically every Wednesday at 07:35 AM (SAST). You can pause them below.
                 </AlertDescription>
             </Alert>
             <div className='flex items-center space-x-2'>
