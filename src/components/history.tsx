@@ -27,35 +27,15 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from './ui/alert-dialog';
-import { Trash2, CheckCircle, XCircle, ChevronDown, ChevronUp, Send, Mail, MessageSquare } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import { Card, CardContent, CardHeader } from './ui/card';
-import { Badge } from './ui/badge';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
 import { useAuth } from '@/contexts/AuthContext';
 
-const getStatusVariant = (status: string) => {
-  switch (status.toLowerCase()) {
-    case 'completed': return 'default';
-    case 'partial': return 'secondary';
-    case 'failed': return 'destructive';
-    default: return 'outline';
-  }
-};
-
-const getMethodIcon = (method: string) => {
-    switch (method.toLowerCase()) {
-        case 'email': return <Mail className="h-4 w-4" />;
-        case 'sms': return <MessageSquare className="h-4 w-4" />;
-        case 'whatsapp': return <Send className="h-4 w-4" />;
-        default: return null;
-    }
-}
 
 export function History() {
   const [history, setHistory] = useState<CommunicationEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
-  const [openItems, setOpenItems] = useState<Set<string>>(new Set());
   const { toast } = useToast();
   const { hasRole } = useAuth();
 
@@ -65,13 +45,15 @@ export function History() {
     try {
       setLoading(true);
       const data = await getHistory();
-      setHistory(data);
+      // Ensure data is always an array to prevent errors
+      setHistory(Array.isArray(data) ? data : []);
     } catch (error) {
       toast({
         title: 'Error fetching history',
         description: 'Could not load the communication history.',
         variant: 'destructive',
       });
+      setHistory([]); // Set to empty array on error
     } finally {
       setLoading(false);
     }
@@ -90,18 +72,6 @@ export function History() {
     }
     setSelectedItems(newSelection);
   };
-  
-  const handleToggleOpen = (id: string) => {
-    setOpenItems(prev => {
-        const newSet = new Set(prev);
-        if (newSet.has(id)) {
-            newSet.delete(id);
-        } else {
-            newSet.add(id);
-        }
-        return newSet;
-    });
-  };
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -112,15 +82,15 @@ export function History() {
   };
 
   const handleDeleteSelected = async () => {
-    if (!canPerformAction) return;
+    if (!canPerformAction || selectedItems.size === 0) return;
     try {
       await deleteHistory(Array.from(selectedItems));
       toast({
         title: 'History Deleted',
-        description: 'The selected history events have been deleted.',
+        description: `${selectedItems.size} history event(s) have been deleted.`,
       });
       setSelectedItems(new Set());
-      fetchHistory();
+      await fetchHistory(); // Refresh the history list
     } catch (error) {
       toast({
         title: 'Error Deleting History',
@@ -148,7 +118,7 @@ export function History() {
               <AlertDialogHeader>
                 <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  This will permanently delete {selectedItems.size} history event(s) and all associated records.
+                  This will permanently delete {selectedItems.size} history event(s). This action cannot be undone.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
@@ -161,7 +131,7 @@ export function History() {
       </div>
 
        <Card>
-            <CardHeader>
+            <CardContent className="p-0">
                 <Table>
                     <TableHeader>
                         <TableRow>
@@ -177,89 +147,46 @@ export function History() {
                         </TableHead>
                         <TableHead>Date</TableHead>
                         <TableHead>Type</TableHead>
-                        <TableHead>Subject</TableHead>
-                        <TableHead>Recipients</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead className="w-[50px]"></TableHead>
+                        <TableHead>Recipient</TableHead>
+                        <TableHead>Content</TableHead>
                         </TableRow>
                     </TableHeader>
-                </Table>
-            </CardHeader>
-            <CardContent>
-                 {loading ? (
-                    Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-12 w-full my-2" />)
-                 ) : history.length > 0 ? (
-                    <div className="space-y-2">
-                    {history.map((item) => (
-                        <Collapsible key={item.id} open={openItems.has(item.id)} onOpenChange={() => handleToggleOpen(item.id)}>
-                            <div className="border rounded-md">
-                                <TableRow className="flex w-full items-center">
-                                    <TableCell className="w-[50px] pl-3">
+                     <TableBody>
+                         {loading ? (
+                            Array.from({ length: 5 }).map((_, i) => (
+                                <TableRow key={i}>
+                                    <TableCell colSpan={5}>
+                                        <Skeleton className="h-8 w-full" />
+                                    </TableCell>
+                                </TableRow>
+                            ))
+                         ) : history.length > 0 ? (
+                            history.map((item) => (
+                                <TableRow key={item.id}>
+                                    <TableCell>
                                         {canPerformAction && (
                                             <Checkbox
                                                 checked={selectedItems.has(item.id)}
-                                                onCheckedChange={(e) => {
-                                                    e.stopPropagation();
-                                                    handleSelectItem(item.id)
-                                                }}
+                                                onCheckedChange={() => handleSelectItem(item.id)}
                                                 aria-label={`Select event ${item.id}`}
                                             />
                                         )}
                                     </TableCell>
-                                    <TableCell className="flex-1 font-medium">{format(new Date(item.timestamp), 'dd MMM yyyy, HH:mm')}</TableCell>
-                                    <TableCell className="flex-1">{item.type}</TableCell>
-                                    <TableCell className="flex-1 truncate">{item.subject}</TableCell>
-                                    <TableCell className="flex-1">{(item.details || []).length} recipient(s)</TableCell>
-                                    <TableCell className="flex-1"><Badge variant={getStatusVariant(item.status)}>{item.status}</Badge></TableCell>
-                                    <TableCell className="w-[50px] pr-3">
-                                        <CollapsibleTrigger asChild>
-                                             <Button variant="ghost" size="icon">
-                                                {openItems.has(item.id) ? <ChevronUp /> : <ChevronDown />}
-                                             </Button>
-                                        </CollapsibleTrigger>
-                                    </TableCell>
+                                    <TableCell className="font-medium whitespace-nowrap">{format(new Date(item.timestamp), 'dd MMM yyyy, HH:mm')}</TableCell>
+                                    <TableCell>{item.type}</TableCell>
+                                    <TableCell>{(item as any).recipient || 'N/A'}</TableCell>
+                                    <TableCell className="text-muted-foreground truncate max-w-sm">{(item as any).content}</TableCell>
                                 </TableRow>
-                                <CollapsibleContent>
-                                    <div className="p-4 bg-muted/50">
-                                        <h4 className="font-semibold mb-2">Details for: {item.subject}</h4>
-                                        <Table>
-                                            <TableHeader>
-                                                <TableRow>
-                                                    <TableHead>Recipient</TableHead>
-                                                    <TableHead>Method</TableHead>
-                                                    <TableHead>Status</TableHead>
-                                                    <TableHead>Notes</TableHead>
-                                                </TableRow>
-                                            </TableHeader>
-                                            <TableBody>
-                                                {(item.details || []).map((detail, index) => (
-                                                    <TableRow key={index}>
-                                                        <TableCell>{detail.recipient}</TableCell>
-                                                        <TableCell className='flex items-center gap-2'>
-                                                            {getMethodIcon(detail.method)} {detail.method}
-                                                        </TableCell>
-                                                        <TableCell>
-                                                            <span className={`flex items-center gap-1 ${detail.status === 'Sent' ? 'text-green-500' : 'text-destructive'}`}>
-                                                                {detail.status === 'Sent' ? <CheckCircle size={16}/> : <XCircle size={16}/>}
-                                                                {detail.status}
-                                                            </span>
-                                                        </TableCell>
-                                                        <TableCell className='text-muted-foreground italic'>{detail.content}</TableCell>
-                                                    </TableRow>
-                                                ))}
-                                            </TableBody>
-                                        </Table>
-                                    </div>
-                                </CollapsibleContent>
-                            </div>
-                        </Collapsible>
-                    ))}
-                    </div>
-                ) : (
-                <div className="text-center text-muted-foreground py-8">
-                    No communication history found.
-                </div>
-                )}
+                            ))
+                        ) : (
+                        <TableRow>
+                            <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                                No communication history found.
+                            </TableCell>
+                        </TableRow>
+                        )}
+                    </TableBody>
+                </Table>
             </CardContent>
       </Card>
     </div>
