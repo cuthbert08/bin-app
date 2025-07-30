@@ -198,7 +198,7 @@ export function History() {
                                     <TableCell className="flex-1 font-medium">{format(new Date(item.timestamp), 'dd MMM yyyy, HH:mm')}</TableCell>
                                     <TableCell className="flex-1">{item.type}</TableCell>
                                     <TableCell className="flex-1 truncate">{item.subject}</TableCell>
-                                    <TableCell className="flex-1">{item.details.length} recipient(s)</TableCell>
+                                    <TableCell className="flex-1">{(item.details || []).length} recipient(s)</TableCell>
                                     <TableCell className="flex-1"><Badge variant={getStatusVariant(item.status)}>{item.status}</Badge></TableCell>
                                     <TableCell className="w-[50px] pr-3">
                                         <CollapsibleTrigger asChild>
@@ -221,7 +221,7 @@ export function History() {
                                                 </TableRow>
                                             </TableHeader>
                                             <TableBody>
-                                                {item.details.map((detail, index) => (
+                                                {(item.details || []).map((detail, index) => (
                                                     <TableRow key={index}>
                                                         <TableCell>{detail.recipient}</TableCell>
                                                         <TableCell className='flex items-center gap-2'>
@@ -254,3 +254,5 @@ export function History() {
     </div>
   );
 }
+
+    
