@@ -3,7 +3,7 @@
 import os
 import json
 from flask import Flask, jsonify, request
-from redis import Redis
+from upstash_redis import Redis
 from datetime import datetime, date, timedelta
 import uuid
 from flask_cors import CORS
@@ -16,8 +16,8 @@ from functools import wraps
 app = Flask(__name__)
 CORS(app)
 
-# Initialize Redis Client
-redis = Redis.from_url(os.environ.get('KV_REST_API_URL'))
+# Initialize Upstash Redis Client
+redis = Redis.from_url(os.environ.get("UPSTASH_REDIS_REST_URL"), os.environ.get("UPSTASH_REDIS_REST_TOKEN"))
 
 
 JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY', 'default-super-secret-key-for-testing')
@@ -1000,3 +1000,6 @@ if __name__ == '__main__':
 
     
 
+
+
+    
