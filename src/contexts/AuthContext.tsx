@@ -49,8 +49,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string) => {
     try {
-      // Bypass the proxy for login since the backend allows CORS for this route
-      const response = await axios.post('https://bin-reminder-app.vercel.app/api/auth/login', { email, password });
+      const response = await axios.post('/api/auth/login', { email, password });
       const data = response.data;
       
       if (data.token && data.user) {
