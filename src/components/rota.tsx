@@ -9,7 +9,7 @@ import { getResidents, updateResidentsOrder } from '@/lib/api';
 import { type Resident } from '@/lib/types';
 import { GripVertical, Save, Clock } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { addDays, nextWednesday, format } from 'date-fns';
+import { addDays, nextWednesday, format, startOfDay } from 'date-fns';
 
 export function Rota() {
   const [residents, setResidents] = useState<Resident[]>([]);
@@ -80,11 +80,11 @@ export function Rota() {
   };
 
   const getDutyDate = (index: number) => {
-    const today = new Date();
+    const today = startOfDay(new Date());
     let wednesday = nextWednesday(today);
-    // If today is Wednesday, nextWednesday gives next week. We want this week.
-    if (format(today, 'iiii') === 'Wednesday') {
-        wednesday = today;
+    // If today is Wednesday, we want to show *this* Wednesday for the person on top
+    if (today.getDay() === 3) {
+      wednesday = today;
     }
     return addDays(wednesday, index * 7);
   };
@@ -139,7 +139,7 @@ export function Rota() {
                     </p>
                     <p className="text-sm text-muted-foreground flex items-center justify-end gap-1">
                       <Clock className='size-3' />
-                      07:40 AM SAST
+                      04:00 AM SAST
                     </p>
                   </div>
                 </li>
@@ -151,5 +151,3 @@ export function Rota() {
     </div>
   );
 }
-
-    

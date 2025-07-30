@@ -51,11 +51,12 @@ export function Dashboard() {
       await triggerReminder(message);
       toast({
         title: 'Reminder Sent!',
-        description: 'The reminder has been successfully sent.',
+        description: 'The reminder has been successfully sent and the turn has been advanced.',
       });
       if (message) {
         setCustomMessage('');
       }
+      loadDashboardData(); // Refresh data to show new person on duty
     } catch (error) {
       toast({
         title: 'Error Sending Reminder',
@@ -191,10 +192,10 @@ export function Dashboard() {
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-muted-foreground">
-              Send the standard weekly reminder to the person currently on duty. This will not advance the turn.
+              Send the standard weekly reminder to the person currently on duty. This will also advance the turn to the next person.
             </p>
             {canPerformAction && (
-              <Button onClick={() => handleSendReminder()} disabled={loading || !!error}>Send Reminder</Button>
+              <Button onClick={() => handleSendReminder()} disabled={loading || !!error}>Send Reminder & Advance</Button>
             )}
           </CardContent>
         </Card>
@@ -210,7 +211,7 @@ export function Dashboard() {
               disabled={loading || !!error || !canPerformAction}
             />
             {canPerformAction && (
-              <Button onClick={() => handleSendReminder(customMessage)} disabled={!customMessage || loading || !!error}>Send Custom Reminder</Button>
+              <Button onClick={() => handleSendReminder(customMessage)} disabled={!customMessage || loading || !!error}>Send Custom Reminder & Advance</Button>
             )}
           </CardContent>
         </Card>
