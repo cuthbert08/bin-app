@@ -8,3 +8,5 @@ def send_whatsapp_message(to, body):
     print(f"Body: {body}")
     print(f"---------------------------------")
     return True
+
+    

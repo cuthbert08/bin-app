@@ -9,3 +9,5 @@ def send_email_message(to, subject, html_content):
     # print(f"Body: {html_content}")
     print(f"----------------------")
     return True
+
+    
